@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+pydantic-settings
+jinja2
+python-multipart
+websockets
+passlib[bcrypt]
+python-jose[cryptography]
+requests

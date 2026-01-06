@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-MUD: Character Creation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #050505;
+            color: #e0e0e0;
+        }
+
+        .font-header {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .selected-race {
+            border: 2px solid #00ff00;
+            background-color: rgba(0, 255, 0, 0.1);
+            transform: scale(1.02);
+            box-shadow: 0 0 15px #00ff00;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-8 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
+
+    <div class="max-w-6xl mx-auto">
+        <h1
+            class="font-header text-4xl text-center text-white mb-8 uppercase tracking-widest border-b border-gray-800 pb-4">
+            Identify Yourself</h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- FORM SECTION -->
+            <div class="lg:col-span-1 bg-gray-900 p-6 rounded border border-gray-700 h-fit">
+                <h2 class="text-xl font-bold mb-4 text-cyan-400">Warriors Details</h2>
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-sm mb-2">Character Name</label>
+                    <input type="text" id="charName"
+                        class="w-full bg-black border border-gray-600 p-2 rounded text-white focus:outline-none focus:border-cyan-500 font-bold text-lg">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-400 text-sm mb-2">Selected Race</label>
+                    <div id="selectedRaceName" class="text-2xl font-header text-yellow-400">None</div>
+                    <p id="selectedRaceDesc" class="text-sm text-gray-500 mt-2">Select a race from the list.</p>
+                </div>
+
+                <div id="createError" class="text-red-500 text-sm mb-4 hidden"></div>
+
+                <button id="createBtn"
+                    class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-4 rounded uppercase tracking-wider font-header disabled:opacity-50 disabled:cursor-not-allowed">
+                    Begin Adventure
+                </button>
+            </div>
+
+            <!-- RACE SELECTION -->
+            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4" id="raceList">
+                <!-- Races injected here -->
+                <div class="text-center text-gray-500 w-full col-span-2">Loading biological data...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "/api/v1";
+        let selectedRace = null;
+        let token = localStorage.getItem('mud_token');
+
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        async function fetchRaces() {
+            try {
+                const res = await fetch(`${API_URL}/races/`);
+                const races = await res.json();
+
+                const container = document.getElementById('raceList');
+                container.innerHTML = '';
+
+                races.forEach(race => {
+                    const card = document.createElement('div');
+                    card.className = "bg-gray-800 p-4 rounded border border-gray-600 cursor-pointer hover:bg-gray-700 transition duration-200 race-card";
+                    card.dataset.name = race.name;
+                    card.dataset.desc = race.description;
+                    card.onclick = () => selectRace(card, race);
+
+                    card.innerHTML = `
+                        <h3 class="font-header text-xl text-yellow-400 mb-2">${race.name}</h3>
+                        <p class="text-sm text-gray-300 mb-4 h-12 overflow-hidden">${race.description}</p>
+                        <div class="grid grid-cols-2 gap-2 text-xs text-gray-400 font-mono">
+                            <div>STR: <span class="text-white">${race.base_stats.str}</span></div>
+                            <div>DEX: <span class="text-white">${race.base_stats.dex}</span></div>
+                            <div>INT: <span class="text-white">${race.base_stats.int}</span></div>
+                            <div>VIT: <span class="text-white">${race.base_stats.vit}</span></div>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-gray-700">
+                            <span class="text-xs text-cyan-500 uppercase">Transformations:</span>
+                            <div class="text-xs text-white">${race.transformations.join(', ')}</div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function selectRace(card, race) {
+            // clear success
+            document.querySelectorAll('.race-card').forEach(c => c.classList.remove('selected-race'));
+            // add active
+            card.classList.add('selected-race');
+
+            selectedRace = race.name;
+            document.getElementById('selectedRaceName').textContent = race.name;
+            document.getElementById('selectedRaceDesc').textContent = race.description;
+        }
+
+        document.getElementById('createBtn').addEventListener('click', async () => {
+            const name = document.getElementById('charName').value;
+            const errDiv = document.getElementById('createError');
+
+            if (!name || !selectedRace) {
+                errDiv.textContent = "Please enter a name and select a race.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/players/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, race: selectedRace })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.detail || "Creation failed");
+                }
+
+                // Success
+                window.location.href = '/game';
+
+            } catch (e) {
+                errDiv.textContent = e.message;
+                errDiv.classList.remove('hidden');
+            }
+        });
+
+        // Init
+        fetchRaces();
+
+    </script>
+</body>
+
+</html>

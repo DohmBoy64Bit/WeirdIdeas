@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-MUD: Play</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #000;
+            color: #ccc;
+            overflow: hidden;
+            /* App-like feel */
+        }
+
+        .font-header {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .panel {
+            background: rgba(10, 10, 15, 0.95);
+            border: 1px solid #333;
+        }
+
+        .hud-scanline {
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 50;
+            opacity: 0.1;
+        }
+
+        /* Chat */
+        .chat-msg {
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+
+        .channel-world {
+            color: #aaa;
+        }
+
+        .channel-say {
+            color: #fff;
+        }
+
+        .channel-system {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .channel-combat {
+            color: #ff5555;
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- TOP BAR -->
+    <header class="h-12 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 z-10 shrink-0">
+        <div class="flex items-center space-x-4">
+            <h1 class="font-header text-yellow-500 text-lg tracking-wider">Z-MUD</h1>
+            <div class="text-xs text-gray-500" id="connectionStatus">Disconnected</div>
+        </div>
+        <div class="flex items-center space-x-6 text-sm">
+            <div class="flex items-center space-x-1">
+                <span class="text-gray-400">PL:</span>
+                <span class="text-white font-bold" id="hudPL">...</span>
+            </div>
+            <div class="flex items-center space-x-1">
+                <span class="text-gray-400">Zeni:</span>
+                <span class="text-yellow-400" id="hudZeni">0</span>
+            </div>
+            <button id="logoutBtn" class="text-red-500 hover:text-red-400 uppercase text-xs">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT GRID -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- LEFT PANEL: Stats & Info (20%) -->
+        <aside class="w-64 bg-gray-950 border-r border-gray-800 flex flex-col p-4 shrink-0 overflow-y-auto">
+
+            <div class="mb-6">
+                <h3 class="font-header text-cyan-500 border-b border-gray-800 pb-1 mb-2">Character</h3>
+                <div class="text-lg text-white font-bold mb-1" id="charName">...</div>
+                <div class="text-sm text-gray-400 mb-1" id="charRace">...</div>
+                <div class="text-xs text-yellow-600 uppercase" id="charTransform">Base Form</div>
+            </div>
+
+            <div class="mb-6 space-y-2 text-sm">
+                <div class="flex justify-between"><span>Level</span><span id="statLevel" class="text-white">1</span>
+                </div>
+                <div class="flex justify-between"><span>EXP</span><span class="text-gray-500"><span
+                            id="statExp">0</span>/<span id="statNext">100</span></span></div>
+                <div class="w-full bg-gray-800 h-1 mt-1 rounded">
+                    <div class="bg-yellow-500 h-1 rounded" style="width: 0%" id="expBar"></div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="font-header text-cyan-500 border-b border-gray-800 pb-1 mb-2">Attributes</h3>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="text-gray-400">STR</div>
+                    <div class="text-right text-white" id="statStr">0</div>
+                    <div class="text-gray-400">DEX</div>
+                    <div class="text-right text-white" id="statDex">0</div>
+                    <div class="text-gray-400">INT</div>
+                    <div class="text-right text-white" id="statInt">0</div>
+                    <div class="text-gray-400">VIT</div>
+                    <div class="text-right text-white" id="statVit">0</div>
+                </div>
+            </div>
+
+            <!-- Minimap Placeholder -->
+            <div class="mt-auto border border-gray-700 bg-black h-48 relative flex items-center justify-center">
+                <div class="text-xs text-gray-600">Local Sector Scan</div>
+                <!-- Dynamic grid could go here -->
+                <canvas id="miniMap" class="absolute inset-0 w-full h-full opacity-50"></canvas>
+            </div>
+
+        </aside>
+
+        <!-- CENTER PANEL: Game/Room View (60%) -->
+        <main class="flex-1 flex flex-col relative bg-black">
+
+            <!-- Graphic/Room Description Header -->
+            <div
+                class="h-1/3 border-b border-gray-800 relative bg-[url('https://cdnb.artstation.com/p/assets/images/images/029/320/295/large/eugene-cha-wasteland.jpg')] bg-cover bg-center">
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black"></div>
+                <div class="absolute bottom-4 left-4">
+                    <h2 class="font-header text-2xl text-white drop-shadow-md mb-1" id="roomName">Loading...</h2>
+                    <p class="text-gray-300 text-sm max-w-2xl drop-shadow-md" id="roomDesc">Establishing neural link...
+                    </p>
+                </div>
+            </div>
+
+            <!-- CHAT / LOG -->
+            <div class="flex-1 p-4 overflow-y-auto font-mono text-sm space-y-1" id="gameLog">
+                <div class="channel-system">System: Welcome to DBZ MUD. Initializing...</div>
+            </div>
+
+            <!-- INPUT -->
+            <div class="h-16 bg-gray-900 border-t border-gray-800 p-3">
+                <form id="commandForm" class="flex h-full">
+                    <input type="text" id="cmdInput" autocomplete="off"
+                        class="flex-1 bg-black border border-gray-700 rounded-l px-4 text-white focus:outline-none focus:border-cyan-500 font-mono"
+                        placeholder="Enter command...">
+                    <button type="submit"
+                        class="bg-cyan-800 hover:bg-cyan-700 text-white px-6 rounded-r font-header uppercase text-sm tracking-wide transition">Send</button>
+                </form>
+            </div>
+
+        </main>
+
+        <!-- RIGHT PANEL: Entities / Inventory (20%) -->
+        <aside class="w-64 bg-gray-950 border-l border-gray-800 flex flex-col p-4 shrink-0">
+            <h3 class="font-header text-red-500 border-b border-gray-800 pb-1 mb-2">In Sector</h3>
+            <ul class="text-sm space-y-2 mb-6" id="entityList">
+                <li class="text-gray-500 italic">Scanning...</li>
+            </ul>
+
+            <h3 class="font-header text-green-500 border-b border-gray-800 pb-1 mb-2">Inventory</h3>
+            <ul class="text-sm space-y-2 overflow-y-auto flex-1" id="inventoryList">
+                <li class="text-gray-600">Empty</li>
+            </ul>
+        </aside>
+
+    </div>
+
+    <!-- Scanline overlay -->
+    <div class="hud-scanline"></div>
+
+    <script src="/static/js/game.js"></script>
+</body>
+
+</html>
