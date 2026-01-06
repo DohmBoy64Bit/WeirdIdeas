@@ -1,0 +1,92 @@
+{
+    "start_area": {
+        "id": "start_area",
+        "name": "City Outskirts",
+        "description": "Safe zone. A quiet road leading to the city.",
+        "exits": {
+            "north": "capsule_lobby",
+            "east": "city_center"
+        },
+        "mobs": []
+    },
+    "capsule_lobby": {
+        "id": "capsule_lobby",
+        "name": "Capsule Corp Lobby",
+        "description": "The shiny reception of Capsule Corporation. Bulma might be here.",
+        "exits": {
+            "south": "start_area"
+        },
+        "mobs": []
+    },
+    "city_center": {
+        "id": "city_center",
+        "name": "West City Center",
+        "description": "Bustling streets with cars flying overhead.",
+        "exits": {
+            "west": "start_area",
+            "north": "item_shop",
+            "east": "wasteland_1"
+        },
+        "mobs": []
+    },
+    "item_shop": {
+        "id": "item_shop",
+        "name": "West City Goods",
+        "description": "A store selling capsules and gear. Type 'buy' to see items.",
+        "exits": {
+            "south": "city_center"
+        },
+        "mobs": []
+    },
+    "wasteland_1": {
+        "id": "wasteland_1",
+        "name": "Rocky Wasteland",
+        "description": "Barren rocks and dry earth. Dangerous creatures roam here. Raditz is rumored to be nearby.",
+        "exits": {
+            "west": "city_center",
+            "east": "wasteland_2"
+        },
+        "mobs": [
+            "saibaman",
+            "dino",
+            "raditz"
+        ]
+    },
+    "wasteland_2": {
+        "id": "wasteland_2",
+        "name": "Deep Wasteland",
+        "description": "Deeper into the wilds. You see a spaceship in the distance.",
+        "exits": {
+            "west": "wasteland_1",
+            "north": "frieza_landing"
+        },
+        "mobs": [
+            "saibaman",
+            "dino",
+            "nappa"
+        ]
+    },
+    "frieza_landing": {
+        "id": "frieza_landing",
+        "name": "Alien Landing Site",
+        "description": "A large round spaceship is parked here. Soldiers are patrolling. The hatch is open.",
+        "exits": {
+            "south": "wasteland_2",
+            "enter": "frieza_ship_interior"
+        },
+        "mobs": [
+            "frieza_soldier"
+        ]
+    },
+    "frieza_ship_interior": {
+        "id": "frieza_ship_interior",
+        "name": "Frieza's Ship - Interaction Room",
+        "description": "You are inside the ship. The air is cold. A menacing figure sits in a hover chair... no, he is standing now.",
+        "exits": {
+            "exit": "frieza_landing"
+        },
+        "mobs": [
+            "frieza"
+        ]
+    }
+}

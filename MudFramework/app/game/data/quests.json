@@ -1,0 +1,15 @@
+{
+    "quest_kill_saibamen": {
+        "id": "quest_kill_saibamen",
+        "title": "Clean up the Wasteland",
+        "description": "Defeat 3 Saibamen.",
+        "type": "kill",
+        "target": "saibaman",
+        "count": 3,
+        "reward": {
+            "zeni": 100,
+            "exp": 50,
+            "item": "potion_heal"
+        }
+    }
+}

@@ -27,30 +27,33 @@ async def create_character_view(request: Request):
 async def game_view(request: Request):
     return templates.TemplateResponse("game.html", {"request": request})
 
+from app.game.engine import GameEngine
+from app.core.database import SessionLocal 
+from app.models.player import Player
+
+engine = GameEngine(manager)
+
 @app.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: int):
     # In a real app, validate token here!
     await manager.connect(websocket, player_id)
     try:
-        # Send initial welcome
-        await manager.send_personal_message({
-            "type": "chat",
-            "sender": "System",
-            "content": "Connected to Z-MUD Server.",
-            "channel": "channel-system"
-        }, player_id)
+        # Create DB session for this connection
+        db = SessionLocal()
         
+        # Initial Look
+        player = db.query(Player).filter(Player.id == player_id).first()
+        if player:
+            await engine.cmd_look(player, [])
+
         while True:
             data = await websocket.receive_text()
-            # Process command (simple echo/chat for now)
-            
-            # Broadcast to all
-            await manager.broadcast({
-                "type": "chat",
-                "sender": f"Player {player_id}",
-                "content": data,
-                "channel": "channel-say"
-            })
+            # Process command via Engine
+            await engine.process_command(player_id, data, db)
             
     except Exception as e:
+        print(f"WS Error: {e}")
         manager.disconnect(player_id)
+    finally:
+        db.close()
+

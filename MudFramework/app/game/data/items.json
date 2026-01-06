@@ -1,0 +1,91 @@
+{
+    "potion_heal": {
+        "id": "potion_heal",
+        "name": "Healing Capacitor",
+        "type": "consumable",
+        "description": "Restores 50 HP.",
+        "effect": {
+            "hp": 50
+        },
+        "price": 20
+    },
+    "sword_iron": {
+        "id": "sword_iron",
+        "name": "Z-Sword Replica",
+        "type": "weapon",
+        "description": "A heavy sword. +5 STR.",
+        "stats": {
+            "str": 5
+        },
+        "price": 100
+    },
+    "armor_basic": {
+        "id": "armor_basic",
+        "name": "Training Weights",
+        "type": "armor",
+        "description": "Heavy clothing. +5 VIT.",
+        "stats": {
+            "vit": 5
+        },
+        "price": 80
+    },
+    "scouter_red": {
+        "id": "scouter_red",
+        "name": "Red Scouter",
+        "type": "accessory",
+        "description": "Reads power levels. +2 INT.",
+        "stats": {
+            "int": 2
+        },
+        "price": 150
+    },
+    "dragon_ball_1": {
+        "id": "dragon_ball_1",
+        "name": "1-Star Dragon Ball",
+        "type": "key_item",
+        "description": "A mystical orange orb with one star.",
+        "price": 0
+    },
+    "dragon_ball_2": {
+        "id": "dragon_ball_2",
+        "name": "2-Star Dragon Ball",
+        "type": "key_item",
+        "description": "A mystical orange orb with two stars.",
+        "price": 0
+    },
+    "dragon_ball_3": {
+        "id": "dragon_ball_3",
+        "name": "3-Star Dragon Ball",
+        "type": "key_item",
+        "description": "A mystical orange orb with three stars.",
+        "price": 0
+    },
+    "dragon_ball_4": {
+        "id": "dragon_ball_4",
+        "name": "4-Star Dragon Ball",
+        "type": "key_item",
+        "description": "A mystical orange orb with four stars.",
+        "price": 0
+    },
+    "dragon_ball_5": {
+        "id": "dragon_ball_5",
+        "name": "5-Star Dragon Ball",
+        "type": "key_item",
+        "description": "A mystical orange orb with five stars.",
+        "price": 0
+    },
+    "dragon_ball_6": {
+        "id": "dragon_ball_6",
+        "name": "6-Star Dragon Ball",
+        "type": "key_item",
+        "description": "A mystical orange orb with six stars.",
+        "price": 0
+    },
+    "dragon_ball_7": {
+        "id": "dragon_ball_7",
+        "name": "7-Star Dragon Ball",
+        "type": "key_item",
+        "description": "A mystical orange orb with seven stars.",
+        "price": 0
+    }
+}

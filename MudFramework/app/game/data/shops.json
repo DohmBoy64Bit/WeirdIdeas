@@ -1,0 +1,10 @@
+{
+    "item_shop": {
+        "name": "West City Goods",
+        "inventory": [
+            "potion_heal",
+            "scouter_red",
+            "armor_basic"
+        ]
+    }
+}

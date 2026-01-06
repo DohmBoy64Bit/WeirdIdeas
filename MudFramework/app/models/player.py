@@ -15,5 +15,11 @@ class Player(Base):
     inventory = Column(JSON, default=[])
     current_map = Column(String, default="start_area")
     position = Column(JSON, default={"x": 0, "y": 0})
+    combat_state = Column(JSON, default=None) # { "enemy_id": "...", "hp": ... }
+    transformation = Column(String, default="Base")
+    zeni = Column(Integer, default=100) # Starting currency
+    equipment = Column(JSON, default={}) # {"weapon": None, "armor": None}
+    active_quests = Column(JSON, default={}) # {"quest_id": {"progress": 0}}
+    completed_quests = Column(JSON, default=[]) # ["quest_id"]
     
     user = relationship("User", backref="player")
