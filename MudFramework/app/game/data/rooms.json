@@ -3,6 +3,7 @@
         "id": "start_area",
         "name": "City Outskirts",
         "description": "Safe zone. A quiet road leading to the city.",
+        "long_description": "The cracked asphalt stretches before you, weeds pushing through ancient concrete. To the east, neon lights pierce the smog-filled sky. North, the sterile glow of Synapse Corp's lobby beckons. This quiet road serves as a buffer between civilization and the unknown—a sanctuary for those gathering their courage before venturing into danger.",
         "exits": {
             "north": "synth_lobby",
             "east": "neon_city"
@@ -13,6 +14,7 @@
         "id": "synth_lobby",
         "name": "Synapse Corp Lobby",
         "description": "The shiny reception of Synapse Corporation. Dr. Areis is conducting research here.",
+        "long_description": "Polished chrome and sterile white walls define this corporate sanctuary. Holographic displays flicker with biometric data and gene sequences. Dr. Areis stands hunched over a portable terminal, his cybernetic eyes scanning readouts with inhuman precision. The air smells faintly of ozone and disinfectant. Glass cases display prototype augmentations—glimpses of humanity's next evolution.",
         "exits": {
             "south": "start_area"
         },
@@ -25,6 +27,7 @@
         "id": "neon_city",
         "name": "Neon City Center",
         "description": "Bustling streets with hover-cars flying overhead.",
+        "long_description": "Towering holograms advertise everything from neural implants to black-market gene mods. Hover-cars streak overhead, their engines humming against the backdrop of a thousand neon signs. Street vendors hawk synthetic food while hackers trade data chips in shadowed alcoves. The cacophony of electronic music, shouting merchants, and distant sirens creates a symphony of organized chaos. This is the beating heart of civilization's last stand.",
         "exits": {
             "west": "start_area",
             "north": "neon_shop",
@@ -36,6 +39,7 @@
         "id": "neon_shop",
         "name": "Neon City Goods",
         "description": "A store selling tech and gear. Type 'buy' to see items.",
+        "long_description": "A cluttered storefront packed with salvaged tech and refurbished gear. Shelves groan under the weight of scouters, training weights, and combat armor. The proprietor—a grizzled cyborg with more metal than flesh—eyes you suspiciously from behind a reinforced counter. Flickering neon signs promise 'Best Prices in the Sector' and 'No Questions Asked.' The smell of machine oil and burned circuitry fills the air.",
         "exits": {
             "south": "neon_city"
         },
@@ -45,6 +49,7 @@
         "id": "wasteland_1",
         "name": "Sector 7 Wasteland",
         "description": "Barren rocks and dry earth. Dangerous creatures roam here.",
+        "long_description": "Civilization ends here. Shattered rock formations jut from rust-colored earth like broken teeth. The skeletal remains of pre-war structures loom in the distance, picked clean by scavengers and time. Strange chittering echoes across the desolate expanse—Bio-Chem Drones and mutated beasts claim this territory. Heat shimmers rise from the ground, distorting the horizon. Only the desperate or foolish venture this far from the city's protective glow.",
         "exits": {
             "west": "neon_city",
             "east": "wasteland_2"
@@ -59,6 +64,7 @@
         "id": "wasteland_2",
         "name": "Deep Sector 7",
         "description": "Deeper into the wilds. You see a spaceship in the distance.",
+        "long_description": "The wasteland grows more hostile here. Jagged crystalline formations erupt from the ground, humming with residual radiation. In the distance, a massive spherical ship dominates the skyline—the Vanguard landing site. Strange energy signatures pulse from it, drawing mutated creatures and hostile forces like moths to flame. Mechanical beasts prowl between the crystal spires. The air tastes metallic. This is where wars are fought in silence.",
         "exits": {
             "west": "wasteland_1",
             "north": "vanguard_landing"
@@ -74,6 +80,7 @@
         "id": "vanguard_landing",
         "name": "Vanguard Landing Site",
         "description": "A large round spaceship is parked here. Soldiers are patrolling. The hatch is open.",
+        "long_description": "A massive spherical warship rests on scorched earth, its hull scarred by countless battles. Landing struts hiss with escaping coolant. Xenon Troopers patrol the perimeter in precise formations, their armor gleaming under harsh floodlights. The access hatch yawns open like a hungry maw, red emergency lighting spilling from within. The ship's engines emit a low, ominous hum that you feel in your bones. Whatever lies inside commands this invasion force.",
         "exits": {
             "south": "wasteland_2",
             "enter": "vanguard_ship"
@@ -86,6 +93,7 @@
         "id": "vanguard_ship",
         "name": "Vanguard Command Ship",
         "description": "You are inside the ship. The air is cold. A menacing figure waits...",
+        "long_description": "The ship's interior is oppressively cold, your breath misting in the recycled air. Alien architecture curves impossibly, defying human comprehension. Viewscreens display star charts of conquered worlds. At the center of the command deck, bathed in crimson light, stands the Xenon Warlord—a being of pure malevolence. His power radiates like a physical force, making the air thick and difficult to breathe. This is the enemy that threatens all life. This is where legends are forged or shattered.",
         "exits": {
             "exit": "vanguard_landing"
         },

@@ -42,7 +42,7 @@ async def websocket_endpoint(websocket: WebSocket, player_id: int):
         with SessionLocal() as db:
             player = db.query(Player).filter(Player.id == player_id).first()
             if player:
-                await engine.cmd_look(player, [])
+                await engine.refresh_ui(player)
 
         while True:
             data = await websocket.receive_text()

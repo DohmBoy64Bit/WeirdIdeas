@@ -7,6 +7,7 @@ class Room:
         self.id = data["id"]
         self.name = data["name"]
         self.description = data["description"]
+        self.long_description = data.get("long_description", data["description"])  # Fallback to description if not set
         self.exits: Dict[str, str] = data.get("exits", {}) # dir -> room_id
         self.mobs: List[str] = data.get("mobs", []) # mob_ids
 

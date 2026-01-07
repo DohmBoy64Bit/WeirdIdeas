@@ -46,7 +46,7 @@ class GameEngine:
         # NORMAL HANDLING
         if verb in ["look", "l"]:
             await self.cmd_look(player, args)
-        if verb in ["north", "south", "east", "west", "up", "down", "n", "s", "e", "w", "u", "d", "enter", "exit"]:
+        elif verb in ["north", "south", "east", "west", "up", "down", "n", "s", "e", "w", "u", "d", "enter", "exit"]:
             await self.cmd_move(player, verb, db)
         elif verb == "move":
             if args:
@@ -61,7 +61,9 @@ class GameEngine:
             await self.cmd_revert(player, db)
         elif verb in ["inventory", "i", "inv"]:
             await self.cmd_inventory(player)
-        elif verb in ["buy", "shop"]:
+        elif verb == "shop":
+            await self.cmd_shop(player, db)
+        elif verb == "buy":
             await self.cmd_buy(player, " ".join(args), db)
         elif verb == "use":
             await self.cmd_use(player, " ".join(args), db)
@@ -323,7 +325,7 @@ class GameEngine:
             db.commit()
             
         # Update UI
-        await self.cmd_look(player, [])
+        await self.refresh_ui(player)
 
     async def cmd_flee(self, player: Player, db: Session):
         if random.random() > 0.5:
@@ -334,11 +336,25 @@ class GameEngine:
         else:
             await self.msg_system(player.id, "Failed to flee!")
 
-    async def cmd_look(self, player: Player, args):
+    async def refresh_ui(self, player: Player):
+        """Internal method to refresh client UI state (stats, inventory, etc.)"""
         room = world.get_room(player.current_map)
-        if not room: room = world.get_start_room()
+        if not room: 
+            room = world.get_start_room()
         
         eff_stats = calculate_effective_stats(player.stats, player.transformation)
+
+        # Hydrate inventory with names
+        gui_inventory = []
+        if player.inventory:
+            for slot in player.inventory:
+                item = inventory_manager.get_item(slot["item_id"])
+                if item:
+                    gui_inventory.append({
+                        "item_id": slot["item_id"],
+                        "name": item.name,
+                        "qty": slot["qty"]
+                    })
 
         await self.manager.send_personal_message({
             "type": "gamestate",
@@ -358,9 +374,57 @@ class GameEngine:
                 "race": player.race,
                 "transformation": player.transformation,
                 "zeni": player.zeni,
-                "inventory": player.inventory
+                "inventory": gui_inventory
             }
         }, player.id)
+
+    async def cmd_look(self, player: Player, args):
+        """Look at the current room and refresh UI"""
+        room = world.get_room(player.current_map)
+        if not room: 
+            room = world.get_start_room()
+        
+        # Build exits list with directional arrows
+        exits_html = ""
+        if room.exits:
+            for direction, room_id in room.exits.items():
+                direction_icon = {
+                    "north": "⬆️", "south": "⬇️", 
+                    "east": "➡️", "west": "⬅️",
+                    "up": "🔼", "down": "🔽",
+                    "enter": "🚪", "exit": "🚪"
+                }.get(direction, "🔹")
+                
+                exits_html += f'<span class="inline-block mr-3 text-cyan-500">{direction_icon} <span class="text-gray-400">{direction}</span></span>'
+        else:
+            exits_html = '<span class="text-gray-600 italic">No exits available</span>'
+        
+        # Generate HTML room card
+        html = f"""
+        <div class="mt-2 mb-4 max-w-3xl border border-gray-800 bg-gray-900/50 rounded p-4 font-mono whitespace-normal">
+            <div class="border-b border-cyan-900/50 pb-2 mb-3">
+                <h3 class="text-cyan-500 font-header text-lg uppercase tracking-wider">
+                    {room.name}
+                </h3>
+            </div>
+            
+            <div class="text-gray-300 text-sm leading-relaxed mb-3 italic border-l-2 border-cyan-800 pl-3">
+                {room.long_description}
+            </div>
+            
+            <div class="mt-3 pt-3 border-t border-gray-800">
+                <h4 class="text-gray-500 font-bold text-xs uppercase mb-2">Available Exits</h4>
+                <div class="flex flex-wrap gap-2">
+                    {exits_html}
+                </div>
+            </div>
+        </div>
+        """
+        
+        await self.msg_system(player.id, html)
+        
+        # Refresh UI panels
+        await self.refresh_ui(player)
 
     async def cmd_move(self, player: Player, direction: str, db: Session):
         short_dir = { "n": "north", "s": "south", "e": "east", "w": "west" }
@@ -379,7 +443,7 @@ class GameEngine:
             player.current_map = current_room.exits[direction]
             db.commit()
             await self.msg_system(player.id, f"You move {direction}...")
-            await self.cmd_look(player, [])
+            await self.refresh_ui(player)
         else:
             await self.msg_system(player.id, "You cannot go that way.")
 
@@ -409,66 +473,78 @@ class GameEngine:
             
         await self.msg_system(player.id, msg)
 
-    async def cmd_buy(self, player: Player, item_name: str, db: Session):
+    async def cmd_shop(self, player: Player, db: Session):
+        """Display the shop interface"""
         room_id = player.current_map
         shop = inventory_manager.get_shop(room_id)
         
         if not shop:
             await self.msg_system(player.id, "There is no shop here.")
             return
+        
+        # HTML Shop Interface
+        html = f"""
+        <div class="mt-2 mb-4 max-w-3xl border border-gray-800 bg-gray-900/50 rounded p-4 font-mono whitespace-normal">
+            <div class="flex justify-between items-center border-b border-cyan-900/50 pb-2 mb-3">
+                <h3 class="text-cyan-500 font-header text-lg uppercase tracking-wider">
+                    {shop['name']}
+                </h3>
+                <span class="text-xs text-yellow-500 font-bold border border-yellow-900/50 px-2 py-1 rounded bg-yellow-900/10">
+                    Credits: {player.zeni}
+                </span>
+            </div>
             
-        if not item_name:
-             # HTML Shop Interface
-             html = f"""
-             <div class="mt-2 mb-4 max-w-3xl border border-gray-800 bg-gray-900/50 rounded p-4 font-mono whitespace-normal">
-                 <div class="flex justify-between items-center border-b border-cyan-900/50 pb-2 mb-3">
-                     <h3 class="text-cyan-500 font-header text-lg uppercase tracking-wider">
-                         {shop['name']}
-                     </h3>
-                     <span class="text-xs text-yellow-500 font-bold border border-yellow-900/50 px-2 py-1 rounded bg-yellow-900/10">
-                         Credits: {player.zeni}
-                     </span>
-                 </div>
-                 
-                 <table class="w-full text-sm border-collapse">
-                     <thead>
-                         <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-800">
-                             <th class="py-2 text-left w-1/3">Item</th>
-                             <th class="py-2 text-center w-20">Price</th>
-                             <th class="py-2 text-left">Description</th>
-                         </tr>
-                     </thead>
-                     <tbody class="divide-y divide-gray-800/50">
-             """
-             
-             if not shop['inventory']:
-                 html += '<tr><td colspan="3" class="py-4 text-center text-gray-500 italic">This shop is empty.</td></tr>'
-             else:
-                 for i_id in shop['inventory']:
-                     item = inventory_manager.get_item(i_id)
-                     if item:
-                         can_afford = player.zeni >= item.price
-                         price_class = "text-yellow-500" if can_afford else "text-red-500"
-                         row_class = "hover:bg-gray-800/50 transition-colors cursor-pointer group"
-                         
-                         html += f"""
-                         <tr class="{row_class}">
-                             <td class="py-2 text-white font-bold group-hover:text-cyan-400 transition-colors">{item.name}</td>
-                             <td class="py-2 text-center {price_class} font-bold">{item.price}</td>
-                             <td class="py-2 text-gray-400 italic">{item.description}</td>
-                         </tr>
-                         """
+            <table class="w-full text-sm border-collapse">
+                <thead>
+                    <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-800">
+                        <th class="py-2 text-left w-1/3">Item</th>
+                        <th class="py-2 text-center w-20">Price</th>
+                        <th class="py-2 text-left">Description</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800/50">
+        """
+        
+        if not shop['inventory']:
+            html += '<tr><td colspan="3" class="py-4 text-center text-gray-500 italic">This shop is empty.</td></tr>'
+        else:
+            for i_id in shop['inventory']:
+                item = inventory_manager.get_item(i_id)
+                if item:
+                    can_afford = player.zeni >= item.price
+                    price_class = "text-yellow-500" if can_afford else "text-red-500"
+                    row_class = "hover:bg-gray-800/50 transition-colors cursor-pointer group"
+                    
+                    html += f"""
+                    <tr class="{row_class}">
+                        <td class="py-2 text-white font-bold group-hover:text-cyan-400 transition-colors">{item.name}</td>
+                        <td class="py-2 text-center {price_class} font-bold">{item.price}</td>
+                        <td class="py-2 text-gray-400 italic">{item.description}</td>
+                    </tr>
+                    """
 
-             html += """
-                     </tbody>
-                 </table>
-                 <div class="mt-3 text-xs text-gray-600 text-center border-t border-gray-800 pt-2">
-                     Type <span class="text-cyan-700">buy &lt;item name&gt;</span> to purchase.
-                 </div>
-             </div>
-             """
-             await self.msg_system(player.id, html)
-             return
+        html += """
+                </tbody>
+            </table>
+            <div class="mt-3 text-xs text-gray-600 text-center border-t border-gray-800 pt-2">
+                Type <span class="text-cyan-700">buy &lt;item name&gt;</span> to purchase.
+            </div>
+        </div>
+        """
+        await self.msg_system(player.id, html)
+
+    async def cmd_buy(self, player: Player, item_name: str, db: Session):
+        """Purchase an item from the current shop"""
+        if not item_name:
+            await self.msg_system(player.id, "Usage: buy <item name>")
+            return
+        
+        room_id = player.current_map
+        shop = inventory_manager.get_shop(room_id)
+        
+        if not shop:
+            await self.msg_system(player.id, "There is no shop here.")
+            return
 
         target_item = None
         for i_id in shop['inventory']:
@@ -502,6 +578,7 @@ class GameEngine:
         db.commit()
         
         await self.msg_system(player.id, f"You bought {target_item.name} for {target_item.price} Credits.")
+        await self.refresh_ui(player)
 
     async def cmd_use(self, player: Player, item_name: str, db: Session):
         if not player.inventory:
@@ -523,6 +600,22 @@ class GameEngine:
             return
 
         if target_item.type == "consumable":
+            # Check for Full HP/Flux before consuming
+            if "hp" in target_item.effect:
+                max_hp = player.stats.get("max_hp", 100)
+                current = player.stats.get("hp", max_hp)
+                if current >= max_hp:
+                    await self.msg_system(player.id, "Your Health is already full!")
+                    return
+
+            if "flux" in target_item.effect:
+                max_flux = player.stats.get("max_flux", 100)
+                current_flux = player.stats.get("flux", max_flux)
+                if current_flux >= max_flux:
+                     await self.msg_system(player.id, "Your Flux is already full!")
+                     return
+
+            # Apply Effects
             if "hp" in target_item.effect:
                 max_hp = player.stats.get("max_hp", 100)
                 current = player.stats.get("hp", max_hp)
@@ -541,6 +634,8 @@ class GameEngine:
             player.inventory = inv
             flag_modified(player, "inventory")
             db.commit()
+            
+            await self.refresh_ui(player)
             
         elif target_item.type in ["weapon", "armor", "accessory"]:
              await self.msg_system(player.id, "You cannot equip items yet (Coming Soon).")
@@ -1080,5 +1175,5 @@ class GameEngine:
             db.commit()
             
         # Update UI
-        await self.cmd_look(player, [])
+        await self.refresh_ui(player)
 
