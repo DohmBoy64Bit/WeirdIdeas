@@ -44,19 +44,19 @@ def test_orb():
     else:
         print("FAILED: Wish check logic broken.")
         
-    # 3. Get the Balls
-    print("Cheating Balls...")
-    ws.send("cheat_balls")
+    # 3. Get the Shards
+    print("Cheating Shards...")
+    ws.send("cheat_shards")
     msg = json.loads(ws.recv()) # "Cheater..."
     print(f"Log: {msg['content']}")
     
     ws.send("inventory")
     msg = json.loads(ws.recv())
-    if "7-Star Dragon Ball" in msg["content"]:
-         print("SUCCESS: Balls obtained.")
+    if "Omega Shard" in msg["content"]:
+         print("SUCCESS: Shards obtained.")
     
-    # 4. Invoke Shenron
-    print("Summoning Shenron...")
+    # 4. Invoke Archon
+    print("Summoning Archon...")
     ws.send("wish")
     
     # Provide generous timeout for dramatic messages
@@ -68,16 +68,16 @@ def test_orb():
             ws.settimeout(2.0)
             msg = json.loads(ws.recv())
             print(f"Log: {msg['content']}")
-            if "SHENRON" in msg["content"]:
+            if "ARCHON" in msg["content"]:
                 summoned = True
             if "gained 5 levels" in msg["content"]:
                 leveled = True
-            if "vanish" in msg["content"]:
+            if "dissipate" in msg["content"]:
                 break
         except: break
 
     if summoned and leveled:
-        print("SUCCESS: Shenron Granted Wish.")
+        print("SUCCESS: Archon Granted Wish.")
     else:
         print("FAILED: Wish execution incomplete.")
 

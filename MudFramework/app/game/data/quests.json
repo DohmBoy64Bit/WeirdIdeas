@@ -2,7 +2,7 @@
     "quest_kill_saibamen": {
         "id": "quest_kill_saibamen",
         "title": "Clean up the Wasteland",
-        "description": "Defeat 3 Saibamen.",
+        "description": "Defeat 3 Bio-Chem Drones.",
         "type": "kill",
         "target": "saibaman",
         "count": 3,

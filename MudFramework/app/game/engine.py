@@ -70,15 +70,15 @@ class GameEngine:
             await self.cmd_quests(player)
         elif verb == "wish":
             await self.cmd_wish(player, db)
-        elif verb == "cheat_balls":
+        elif verb == "cheat_shards":
              # Dev Helper
              inv = list(player.inventory) if player.inventory else []
              for i in range(1, 8):
-                 inv.append({"item_id": f"dragon_ball_{i}", "qty": 1})
+                 inv.append({"item_id": f"cosmic_shard_{i}", "qty": 1})
              player.inventory = inv
              flag_modified(player, "inventory")
              db.commit()
-             await self.msg_system(player.id, "Cheater! You have the balls.")
+             await self.msg_system(player.id, "Cheater! You have the Shards.")
         else:
             await self.msg_system(player.id, "Unknown command.")
 
@@ -107,8 +107,12 @@ class GameEngine:
     async def cmd_hunt(self, player: Player, db: Session):
         room = world.get_room(player.current_map)
         if not room: 
-            await self.msg_system(player.id, "You are lost in the void.")
-            return
+             # Auto-fix
+            start_room = world.get_start_room()
+            player.current_map = start_room.id
+            db.commit()
+            room = start_room
+            await self.msg_system(player.id, "You were lost in the void and returned to reality.")
 
         if not room.mobs:
             await self.msg_system(player.id, "There is nothing to hunt here.")
@@ -240,7 +244,7 @@ class GameEngine:
             player.current_map = "start_area"
             player.transformation = "Base"
             db.commit()
-            await self.msg_system(player.id, "You are defeated... Reviving at start.")
+            await self.msg_system(player.id, f"You took fatal damage! Reviving at start with {player.stats['hp']} HP.")
             
         elif outcome["status"] == "continue":
             player.combat_state["hp"] = outcome["mob_hp"]
@@ -248,6 +252,9 @@ class GameEngine:
             flag_modified(player, "combat_state")
             flag_modified(player, "stats")
             db.commit()
+            
+        # Update UI
+        await self.cmd_look(player, [])
 
     async def cmd_flee(self, player: Player, db: Session):
         if random.random() > 0.5:
@@ -287,7 +294,15 @@ class GameEngine:
         short_dir = { "n": "north", "s": "south", "e": "east", "w": "west" }
         direction = short_dir.get(direction, direction)
         current_room = world.get_room(player.current_map)
-        if not current_room: return
+        
+        # Auto-fix if room doesn't exist (e.g. after map update)
+        if not current_room:
+            start_room = world.get_start_room()
+            player.current_map = start_room.id
+            db.commit()
+            current_room = start_room
+            await self.msg_system(player.id, "You were lost in the void and returned to reality.")
+
         if direction in current_room.exits:
             player.current_map = current_room.exits[direction]
             db.commit()
@@ -314,7 +329,7 @@ class GameEngine:
                 if item:
                     inv_list.append(f"{item.name} x{item_data['qty']}")
         
-        msg = f"Zeni: {player.zeni}\n"
+        msg = f"Credits: {player.zeni}\n"
         if inv_list:
             msg += "Inventory:\n- " + "\n- ".join(inv_list)
         else:
@@ -335,7 +350,7 @@ class GameEngine:
              for i_id in shop['inventory']:
                  item = inventory_manager.get_item(i_id)
                  if item:
-                     msg += f"\n- {item.name}: {item.price} Zeni"
+                     msg += f"\n- {item.name}: {item.price} Credits"
              await self.msg_system(player.id, msg)
              return
 
@@ -370,7 +385,7 @@ class GameEngine:
         flag_modified(player, "inventory")
         db.commit()
         
-        await self.msg_system(player.id, f"You bought {target_item.name} for {target_item.price} Zeni.")
+        await self.msg_system(player.id, f"You bought {target_item.name} for {target_item.price} Credits.")
 
     async def cmd_use(self, player: Player, item_name: str, db: Session):
         if not player.inventory:
@@ -440,7 +455,7 @@ class GameEngine:
                 rewards = []
                 if "zeni" in quest["reward"]:
                     player.zeni += quest["reward"]["zeni"]
-                    rewards.append(f"{quest['reward']['zeni']} Zeni")
+                    rewards.append(f"{quest['reward']['zeni']} Credits")
                 if "exp" in quest["reward"]:
                     player.exp += quest["reward"]["exp"]
                     rewards.append(f"{quest['reward']['exp']} EXP")
@@ -494,8 +509,8 @@ class GameEngine:
         await self.msg_system(player.id, msg)
 
     async def cmd_wish(self, player: Player, db: Session):
-        # Check for Dragon Balls 1-7
-        required = [f"dragon_ball_{i}" for i in range(1, 8)]
+        # Check for Cosmic Shards 1-7
+        required = [f"cosmic_shard_{i}" for i in range(1, 8)]
         has_all = True
         
         # Build inventory lookup
@@ -510,15 +525,15 @@ class GameEngine:
                 break
         
         if not has_all:
-             await self.msg_system(player.id, "You do not have all 7 Dragon Balls.")
+             await self.msg_system(player.id, "You do not have all 7 Cosmic Shards.")
              return
 
         # Summon Logic
-        await self.msg_system(player.id, "The sky turns dark... thunder rumbles...")
+        await self.msg_system(player.id, "The shards resonate... a rift opens in reality...")
         await self.manager.broadcast({
-             "type": "chat", "sender": "System", "content": "SHENRON has been summoned by a powerful warrior!", "channel": "channel-info"
+             "type": "chat", "sender": "System", "content": "THE ARCHON has been summoned by a powerful traveler!", "channel": "channel-info"
         })
-        await self.msg_system(player.id, "SHENRON: 'I SHALL GRANT YOU ONE WISH. I WILL MAKE YOU POWERFUL.'")
+        await self.msg_system(player.id, "ARCHON: 'YOU HAVE AWAKENED ME. STATE YOUR DESIRE.'")
         
         # Reward: +5 Levels and full heal
         old_level = player.level
@@ -551,4 +566,4 @@ class GameEngine:
         db.commit()
 
         await self.msg_system(player.id, f"You have gained 5 levels! (Level {old_level} -> {player.level})")
-        await self.msg_system(player.id, "SHENRON: 'FAREWELL.' (The balls scatter to the winds... well, they vanish from your inventory).")
+        await self.msg_system(player.id, "ARCHON: 'IT IS DONE.' (The shards dissipate into the void).")

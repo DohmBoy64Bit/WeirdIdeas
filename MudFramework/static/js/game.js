@@ -31,6 +31,7 @@ const els = {
     vit: document.getElementById('statVit'),
 
     pl: document.getElementById('hudPL'),
+    credits: document.getElementById('hudCredits'),
     roomName: document.getElementById('roomName'),
     roomDesc: document.getElementById('roomDesc'),
     entities: document.getElementById('entityList'),
@@ -87,6 +88,9 @@ function updateStats(p) {
     // Fake PL calculation
     const pl = (p.stats.str + p.stats.dex + p.stats.int + p.stats.vit) * 10 * p.level;
     els.pl.textContent = pl.toLocaleString();
+
+    // Credits
+    if (els.credits) els.credits.textContent = (p.zeni || 0).toLocaleString();
 
     // Inventory
     els.inventory.innerHTML = '';
@@ -183,10 +187,10 @@ function updateRoom(room) {
     const imgEntry = document.getElementById('roomImage');
     // Simple mock logic for images
     let imgUrl = "https://placehold.co/800x400/0f172a/cbd5e1?text=Zone";
-    if (room.id.includes("wasteland")) imgUrl = "https://placehold.co/800x400/3f2e18/a88b68?text=Wasteland";
-    else if (room.id.includes("city")) imgUrl = "https://placehold.co/800x400/1e293b/94a3b8?text=West+City";
-    else if (room.id.includes("capsule")) imgUrl = "https://placehold.co/800x400/e2e8f0/0f172a?text=Capsule+Corp";
-    else if (room.id.includes("frieza")) imgUrl = "https://placehold.co/800x400/311b92/b39ddb?text=Frieza+Ship";
+    if (room.id.includes("wasteland")) imgUrl = "https://placehold.co/800x400/3f2e18/a88b68?text=Sector+7";
+    else if (room.id.includes("neon")) imgUrl = "https://placehold.co/800x400/1e293b/94a3b8?text=Neon+City";
+    else if (room.id.includes("synth")) imgUrl = "https://placehold.co/800x400/e2e8f0/0f172a?text=Synapse+Corp";
+    else if (room.id.includes("vanguard")) imgUrl = "https://placehold.co/800x400/311b92/b39ddb?text=Vanguard+Command";
     else if (room.id.includes("start")) imgUrl = "https://placehold.co/800x400/22c55e/f0fdf4?text=Safe+Zone";
 
     imgEntry.src = imgUrl;

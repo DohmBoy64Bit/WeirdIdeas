@@ -39,53 +39,53 @@
         },
         "price": 150
     },
-    "dragon_ball_1": {
-        "id": "dragon_ball_1",
-        "name": "1-Star Dragon Ball",
+    "cosmic_shard_1": {
+        "id": "cosmic_shard_1",
+        "name": "Alpha Shard (1)",
         "type": "key_item",
-        "description": "A mystical orange orb with one star.",
+        "description": "A pulsing crystal fragment. 1/7 of the Key.",
         "price": 0
     },
-    "dragon_ball_2": {
-        "id": "dragon_ball_2",
-        "name": "2-Star Dragon Ball",
+    "cosmic_shard_2": {
+        "id": "cosmic_shard_2",
+        "name": "Beta Shard (2)",
         "type": "key_item",
-        "description": "A mystical orange orb with two stars.",
+        "description": "A pulsing crystal fragment. 2/7 of the Key.",
         "price": 0
     },
-    "dragon_ball_3": {
-        "id": "dragon_ball_3",
-        "name": "3-Star Dragon Ball",
+    "cosmic_shard_3": {
+        "id": "cosmic_shard_3",
+        "name": "Gamma Shard (3)",
         "type": "key_item",
-        "description": "A mystical orange orb with three stars.",
+        "description": "A pulsing crystal fragment. 3/7 of the Key.",
         "price": 0
     },
-    "dragon_ball_4": {
-        "id": "dragon_ball_4",
-        "name": "4-Star Dragon Ball",
+    "cosmic_shard_4": {
+        "id": "cosmic_shard_4",
+        "name": "Delta Shard (4)",
         "type": "key_item",
-        "description": "A mystical orange orb with four stars.",
+        "description": "A pulsing crystal fragment. 4/7 of the Key.",
         "price": 0
     },
-    "dragon_ball_5": {
-        "id": "dragon_ball_5",
-        "name": "5-Star Dragon Ball",
+    "cosmic_shard_5": {
+        "id": "cosmic_shard_5",
+        "name": "Epsilon Shard (5)",
         "type": "key_item",
-        "description": "A mystical orange orb with five stars.",
+        "description": "A pulsing crystal fragment. 5/7 of the Key.",
         "price": 0
     },
-    "dragon_ball_6": {
-        "id": "dragon_ball_6",
-        "name": "6-Star Dragon Ball",
+    "cosmic_shard_6": {
+        "id": "cosmic_shard_6",
+        "name": "Zeta Shard (6)",
         "type": "key_item",
-        "description": "A mystical orange orb with six stars.",
+        "description": "A pulsing crystal fragment. 6/7 of the Key.",
         "price": 0
     },
-    "dragon_ball_7": {
-        "id": "dragon_ball_7",
-        "name": "7-Star Dragon Ball",
+    "cosmic_shard_7": {
+        "id": "cosmic_shard_7",
+        "name": "Omega Shard (7)",
         "type": "key_item",
-        "description": "A mystical orange orb with seven stars.",
+        "description": "A pulsing crystal fragment. 7/7 of the Key.",
         "price": 0
     }
 }

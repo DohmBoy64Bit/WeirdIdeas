@@ -4,89 +4,89 @@
         "name": "City Outskirts",
         "description": "Safe zone. A quiet road leading to the city.",
         "exits": {
-            "north": "capsule_lobby",
-            "east": "city_center"
+            "north": "synth_lobby",
+            "east": "neon_city"
         },
         "mobs": []
     },
-    "capsule_lobby": {
-        "id": "capsule_lobby",
-        "name": "Capsule Corp Lobby",
-        "description": "The shiny reception of Capsule Corporation. Bulma might be here.",
+    "synth_lobby": {
+        "id": "synth_lobby",
+        "name": "Synapse Corp Lobby",
+        "description": "The shiny reception of Synapse Corporation. Dr. Aris might be here.",
         "exits": {
             "south": "start_area"
         },
         "mobs": []
     },
-    "city_center": {
-        "id": "city_center",
-        "name": "West City Center",
-        "description": "Bustling streets with cars flying overhead.",
+    "neon_city": {
+        "id": "neon_city",
+        "name": "Neon City Center",
+        "description": "Bustling streets with hover-cars flying overhead.",
         "exits": {
             "west": "start_area",
-            "north": "item_shop",
+            "north": "neon_shop",
             "east": "wasteland_1"
         },
         "mobs": []
     },
-    "item_shop": {
-        "id": "item_shop",
-        "name": "West City Goods",
-        "description": "A store selling capsules and gear. Type 'buy' to see items.",
+    "neon_shop": {
+        "id": "neon_shop",
+        "name": "Neon City Goods",
+        "description": "A store selling tech and gear. Type 'buy' to see items.",
         "exits": {
-            "south": "city_center"
+            "south": "neon_city"
         },
         "mobs": []
     },
     "wasteland_1": {
         "id": "wasteland_1",
-        "name": "Rocky Wasteland",
-        "description": "Barren rocks and dry earth. Dangerous creatures roam here. Raditz is rumored to be nearby.",
+        "name": "Sector 7 Wasteland",
+        "description": "Barren rocks and dry earth. Dangerous creatures roam here.",
         "exits": {
-            "west": "city_center",
+            "west": "neon_city",
             "east": "wasteland_2"
         },
         "mobs": [
             "saibaman",
             "dino",
-            "raditz"
+            "vanguard_scout"
         ]
     },
     "wasteland_2": {
         "id": "wasteland_2",
-        "name": "Deep Wasteland",
+        "name": "Deep Sector 7",
         "description": "Deeper into the wilds. You see a spaceship in the distance.",
         "exits": {
             "west": "wasteland_1",
-            "north": "frieza_landing"
+            "north": "vanguard_landing"
         },
         "mobs": [
             "saibaman",
             "dino",
-            "nappa"
+            "vanguard_general"
         ]
     },
-    "frieza_landing": {
-        "id": "frieza_landing",
-        "name": "Alien Landing Site",
+    "vanguard_landing": {
+        "id": "vanguard_landing",
+        "name": "Vanguard Landing Site",
         "description": "A large round spaceship is parked here. Soldiers are patrolling. The hatch is open.",
         "exits": {
             "south": "wasteland_2",
-            "enter": "frieza_ship_interior"
+            "enter": "vanguard_ship"
         },
         "mobs": [
             "frieza_soldier"
         ]
     },
-    "frieza_ship_interior": {
-        "id": "frieza_ship_interior",
-        "name": "Frieza's Ship - Interaction Room",
-        "description": "You are inside the ship. The air is cold. A menacing figure sits in a hover chair... no, he is standing now.",
+    "vanguard_ship": {
+        "id": "vanguard_ship",
+        "name": "Vanguard Command Ship",
+        "description": "You are inside the ship. The air is cold. A menacing figure waits...",
         "exits": {
-            "exit": "frieza_landing"
+            "exit": "vanguard_landing"
         },
         "mobs": [
-            "frieza"
+            "xenon_warlord"
         ]
     }
 }

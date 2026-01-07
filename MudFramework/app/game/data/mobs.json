@@ -1,7 +1,7 @@
 {
     "saibaman": {
         "id": "saibaman",
-        "name": "Saibaman",
+        "name": "Bio-Chem Drone",
         "description": "A small green creature grown from the soil. It cackles maniacally.",
         "stats": {
             "hp": 20,
@@ -14,14 +14,14 @@
         },
         "drops": [
             {
-                "item_id": "dragon_ball_1",
+                "item_id": "cosmic_shard_1",
                 "rate": 0.5
             }
         ]
     },
     "frieza_soldier": {
         "id": "frieza_soldier",
-        "name": "Frieza Soldier",
+        "name": "Xenon Trooper",
         "description": "A soldier wearing armor and a scouter. They look weak.",
         "stats": {
             "hp": 80,
@@ -41,63 +41,9 @@
             }
         ]
     },
-    "raditz": {
-        "id": "raditz",
-        "name": "Raditz",
-        "description": "A long-haired Saiyan warrior. He looks angry.",
-        "stats": {
-            "hp": 200,
-            "max_hp": 200,
-            "str": 25,
-            "vit": 15,
-            "exp": 500
-        },
-        "drops": [
-            {
-                "item_id": "dragon_ball_2",
-                "rate": 1.0
-            }
-        ]
-    },
-    "nappa": {
-        "id": "nappa",
-        "name": "Nappa",
-        "description": "A bald, muscular Saiyan elite.",
-        "stats": {
-            "hp": 500,
-            "max_hp": 500,
-            "str": 50,
-            "vit": 40,
-            "exp": 1500
-        },
-        "drops": [
-            {
-                "item_id": "dragon_ball_3",
-                "rate": 1.0
-            }
-        ]
-    },
-    "frieza": {
-        "id": "frieza",
-        "name": "Lord Frieza",
-        "description": "The galactic tyrant himself. He is in his final form.",
-        "stats": {
-            "hp": 2000,
-            "max_hp": 2000,
-            "str": 150,
-            "vit": 100,
-            "exp": 10000
-        },
-        "drops": [
-            {
-                "item_id": "dragon_ball_7",
-                "rate": 1.0
-            }
-        ]
-    },
     "dino": {
         "id": "dino",
-        "name": "Wasteland Dinosaur",
+        "name": "Wasteland Beast",
         "description": "A massive dinosaur roaming the plains. It looks hungry.",
         "stats": {
             "hp": 200,
@@ -108,5 +54,59 @@
             "vit": 20,
             "exp": 100
         }
+    },
+    "vanguard_scout": {
+        "id": "vanguard_scout",
+        "name": "Vanguard Scout",
+        "description": "A long-haired alien warrior. He looks angry.",
+        "stats": {
+            "hp": 200,
+            "max_hp": 200,
+            "str": 25,
+            "vit": 15,
+            "exp": 500
+        },
+        "drops": [
+            {
+                "item_id": "cosmic_shard_2",
+                "rate": 1.0
+            }
+        ]
+    },
+    "vanguard_general": {
+        "id": "vanguard_general",
+        "name": "Vanguard General",
+        "description": "A bald, muscular alien elite.",
+        "stats": {
+            "hp": 800,
+            "max_hp": 800,
+            "str": 50,
+            "vit": 40,
+            "exp": 1500
+        },
+        "drops": [
+            {
+                "item_id": "cosmic_shard_3",
+                "rate": 1.0
+            }
+        ]
+    },
+    "xenon_warlord": {
+        "id": "xenon_warlord",
+        "name": "Xenon Warlord",
+        "description": "The galactic tyrant himself.",
+        "stats": {
+            "hp": 5000,
+            "max_hp": 5000,
+            "str": 150,
+            "vit": 100,
+            "exp": 10000
+        },
+        "drops": [
+            {
+                "item_id": "cosmic_shard_7",
+                "rate": 1.0
+            }
+        ]
     }
 }

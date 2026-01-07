@@ -1,6 +1,6 @@
 {
-    "item_shop": {
-        "name": "West City Goods",
+    "neon_shop": {
+        "name": "Neon City Goods",
         "inventory": [
             "potion_heal",
             "scouter_red",

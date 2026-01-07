@@ -1,11 +1,11 @@
 {
     "bulma_briefs": {
-        "id": "bulma_briefs",
-        "name": "Bulma",
-        "room_id": "capsule_lobby",
+        "id": "dr_aris",
+        "name": "Dr. Aris",
+        "room_id": "synth_lobby",
         "dialogue": {
-            "default": "Hey there! We need some combat data. Can you help?",
-            "quest_start": "Great! Go defeat 3 Saibamen in the Wastelands.",
+            "default": "Hey there! We need some field data. Can you help?",
+            "quest_start": "Great! Go defeat 3 Bio-Chem Drones in the Wastelands.",
             "quest_pending": "You haven't finished yet. Go get 'em!",
             "quest_complete": "Amazing work! Here's your payment."
         },
