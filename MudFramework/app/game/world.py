@@ -3,7 +3,7 @@ import os
 from typing import Dict, Optional, List
 
 class Room:
-    def __init__(self, data: Dict):
+    def __init__(self, data):
         self.id = data["id"]
         self.name = data["name"]
         self.description = data["description"]

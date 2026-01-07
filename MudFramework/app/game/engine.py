@@ -267,9 +267,10 @@ class GameEngine:
         await self.manager.send_personal_message({
             "type": "gamestate",
             "room": {
+                "id": room.id,
                 "name": room.name,
                 "description": room.description,
-                "exits": list(room.exits.keys())
+                "exits": room.exits
             },
             "player": {
                 "id": player.id, 
