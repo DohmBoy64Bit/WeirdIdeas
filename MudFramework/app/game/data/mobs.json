@@ -136,5 +136,20 @@
                 "rate": 1.0
             }
         ]
+    },
+    "dr_areis": {
+        "id": "dr_areis",
+        "name": "Dr. Areis",
+        "description": "The Chief Bio-Engineer of Synapse Corps. His eyes glow with cybernetic enhancements.",
+        "stats": {
+            "hp": 500,
+            "max_hp": 500,
+            "str": 10,
+            "dex": 10,
+            "int": 100,
+            "vit": 50,
+            "exp": 0
+        },
+        "drops": []
     }
 }

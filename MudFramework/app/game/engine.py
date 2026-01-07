@@ -61,7 +61,7 @@ class GameEngine:
             await self.cmd_revert(player, db)
         elif verb in ["inventory", "i", "inv"]:
             await self.cmd_inventory(player)
-        elif verb == "buy":
+        elif verb in ["buy", "shop"]:
             await self.cmd_buy(player, " ".join(args), db)
         elif verb == "use":
             await self.cmd_use(player, " ".join(args), db)
@@ -346,7 +346,8 @@ class GameEngine:
                 "id": room.id,
                 "name": room.name,
                 "description": room.description,
-                "exits": room.exits
+                "exits": room.exits,
+                "mobs": room.mobs
             },
             "player": {
                 "id": player.id, 
@@ -417,12 +418,56 @@ class GameEngine:
             return
             
         if not item_name:
-             msg = f"Welcome to {shop['name']}!\nGoods for sale:"
-             for i_id in shop['inventory']:
-                 item = inventory_manager.get_item(i_id)
-                 if item:
-                     msg += f"\n- {item.name}: {item.price} Credits"
-             await self.msg_system(player.id, msg)
+             # HTML Shop Interface
+             html = f"""
+             <div class="mt-2 mb-4 max-w-3xl border border-gray-800 bg-gray-900/50 rounded p-4 font-mono whitespace-normal">
+                 <div class="flex justify-between items-center border-b border-cyan-900/50 pb-2 mb-3">
+                     <h3 class="text-cyan-500 font-header text-lg uppercase tracking-wider">
+                         {shop['name']}
+                     </h3>
+                     <span class="text-xs text-yellow-500 font-bold border border-yellow-900/50 px-2 py-1 rounded bg-yellow-900/10">
+                         Credits: {player.zeni}
+                     </span>
+                 </div>
+                 
+                 <table class="w-full text-sm border-collapse">
+                     <thead>
+                         <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-800">
+                             <th class="py-2 text-left w-1/3">Item</th>
+                             <th class="py-2 text-center w-20">Price</th>
+                             <th class="py-2 text-left">Description</th>
+                         </tr>
+                     </thead>
+                     <tbody class="divide-y divide-gray-800/50">
+             """
+             
+             if not shop['inventory']:
+                 html += '<tr><td colspan="3" class="py-4 text-center text-gray-500 italic">This shop is empty.</td></tr>'
+             else:
+                 for i_id in shop['inventory']:
+                     item = inventory_manager.get_item(i_id)
+                     if item:
+                         can_afford = player.zeni >= item.price
+                         price_class = "text-yellow-500" if can_afford else "text-red-500"
+                         row_class = "hover:bg-gray-800/50 transition-colors cursor-pointer group"
+                         
+                         html += f"""
+                         <tr class="{row_class}">
+                             <td class="py-2 text-white font-bold group-hover:text-cyan-400 transition-colors">{item.name}</td>
+                             <td class="py-2 text-center {price_class} font-bold">{item.price}</td>
+                             <td class="py-2 text-gray-400 italic">{item.description}</td>
+                         </tr>
+                         """
+
+             html += """
+                     </tbody>
+                 </table>
+                 <div class="mt-3 text-xs text-gray-600 text-center border-t border-gray-800 pt-2">
+                     Type <span class="text-cyan-700">buy &lt;item name&gt;</span> to purchase.
+                 </div>
+             </div>
+             """
+             await self.msg_system(player.id, html)
              return
 
         target_item = None
@@ -700,7 +745,7 @@ class GameEngine:
         
         # Build HTML Table
         html = f"""
-        <div class="mt-2 mb-4 border border-gray-800 bg-gray-900/50 rounded p-4 font-mono whitespace-normal">
+        <div class="mt-2 mb-4 max-w-3xl border border-gray-800 bg-gray-900/50 rounded p-4 font-mono whitespace-normal">
             <h3 class="text-cyan-500 font-header text-lg border-b border-cyan-900/50 pb-2 mb-3 uppercase tracking-wider">
                 Skill Progression <span class="text-gray-500 text-sm">[{player.race}]</span>
             </h3>

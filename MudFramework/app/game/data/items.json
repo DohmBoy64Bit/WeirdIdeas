@@ -9,6 +9,28 @@
         },
         "price": 20
     },
+    "hyper_potion": {
+        "id": "hyper_potion",
+        "name": "Hyper Potion",
+        "type": "consumable",
+        "description": "Advanced healing formula. Restores 300 HP.",
+        "effect": {
+            "hp": 300
+        },
+        "price": 100
+    },
+    "neural_stim": {
+        "id": "neural_stim",
+        "name": "Neural Stimulator",
+        "type": "consumable",
+        "description": "Stimulates brain activity. +10 INT for 5 minutes (Stackable).",
+        "effect": {
+            "buff_stat": "int",
+            "buff_amount": 10,
+            "duration": 300
+        },
+        "price": 250
+    },
     "sword_iron": {
         "id": "sword_iron",
         "name": "Z-Sword Replica",

@@ -12,11 +12,14 @@
     "synth_lobby": {
         "id": "synth_lobby",
         "name": "Synapse Corp Lobby",
-        "description": "The shiny reception of Synapse Corporation. Dr. Aris might be here.",
+        "description": "The shiny reception of Synapse Corporation. Dr. Areis is conducting research here.",
         "exits": {
             "south": "start_area"
         },
-        "mobs": []
+        "mobs": [
+            "dr_areis"
+        ],
+        "shop_id": "synapse_shop"
     },
     "neon_city": {
         "id": "neon_city",

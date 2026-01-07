@@ -6,5 +6,13 @@
             "scouter_red",
             "armor_basic"
         ]
+    },
+    "synapse_shop": {
+        "name": "Synapse Bio-Lab Supplies",
+        "inventory": [
+            "hyper_potion",
+            "neural_stim",
+            "potion_heal"
+        ]
     }
 }
