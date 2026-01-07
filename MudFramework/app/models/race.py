@@ -7,6 +7,7 @@ class Race(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True)
     description = Column(String)
-    base_stats = Column(JSON)
-    scaling_stats = Column(JSON) # How stats grow per level
-    transformations = Column(JSON) # List of transformations
+    base_stats = Column(JSON, default={})
+    scaling_stats = Column(JSON, default={}) # How stats grow per level
+    transformations = Column(JSON, default=[]) # List of transformations
+    base_flux = Column(Integer, default=100)  # Base Flux energy for this race of transformations

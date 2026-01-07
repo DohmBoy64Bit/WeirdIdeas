@@ -22,11 +22,22 @@ def create_player(player_in: PlayerCreate, current_user: User = Depends(deps.get
     if not race:
          raise HTTPException(status_code=404, detail="Race not found.")
 
+    # Initialize stats
+    stats = race.base_stats.copy()
+    stats["hp"] = stats["vit"] * 10
+    stats["max_hp"] = stats["vit"] * 10
+    
+    # Initialize Flux: base_flux + (INT * 5)
+    base_flux = race.base_flux if race.base_flux else 100
+    max_flux = base_flux + (stats.get("int", 0) * 5)
+    stats["flux"] = max_flux
+    stats["max_flux"] = max_flux
+    
     player = Player(
         user_id=current_user.id,
         name=player_in.name,
         race=player_in.race,
-        stats=race.base_stats, # Start with base stats
+        stats=stats, # Use the calculated stats
         current_map="start_area",
         position={"x": 0, "y": 0}
     )

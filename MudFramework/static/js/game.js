@@ -24,6 +24,8 @@ const els = {
     hpCur: document.getElementById('statHpCur'),
     hpMax: document.getElementById('statHpMax'),
     hpBar: document.getElementById('hpBar'),
+    fluxBar: document.getElementById('fluxBar'),
+    fluxText: document.getElementById('fluxText'),
 
     str: document.getElementById('statStr'),
     dex: document.getElementById('statDex'),
@@ -71,13 +73,21 @@ function updateStats(p) {
     els.next.textContent = next;
     els.bar.style.width = Math.min(100, (p.exp / next) * 100) + '%';
 
-    // HP
-    const hp = p.stats.hp || (p.stats.vit * 10);
+    // HP Bar
+    const hp = p.stats.hp || 0;
     const maxHp = p.stats.max_hp || (p.stats.vit * 10);
     els.hpCur.textContent = hp;
     els.hpMax.textContent = maxHp;
     const hpPct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
     els.hpBar.style.width = hpPct + '%';
+    if (els.hpText) els.hpText.textContent = `${hp}/${maxHp}`;
+
+    // Flux Bar
+    const flux = p.stats.flux || 0;
+    const maxFlux = p.stats.max_flux || 100; // Default max flux to 100 if not provided
+    const fluxPct = Math.max(0, Math.min(100, (flux / maxFlux) * 100));
+    if (els.fluxBar) els.fluxBar.style.width = fluxPct + '%';
+    if (els.fluxText) els.fluxText.textContent = `${flux}/${maxFlux}`;
 
     // Stats
     els.str.textContent = p.stats.str;

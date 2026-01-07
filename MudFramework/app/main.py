@@ -38,22 +38,20 @@ async def websocket_endpoint(websocket: WebSocket, player_id: int):
     # In a real app, validate token here!
     await manager.connect(websocket, player_id)
     try:
-        # Create DB session for this connection
-        db = SessionLocal()
-        
-        # Initial Look
-        player = db.query(Player).filter(Player.id == player_id).first()
-        if player:
-            await engine.cmd_look(player, [])
+        # Initial Look with its own session
+        with SessionLocal() as db:
+            player = db.query(Player).filter(Player.id == player_id).first()
+            if player:
+                await engine.cmd_look(player, [])
 
         while True:
             data = await websocket.receive_text()
-            # Process command via Engine
-            await engine.process_command(player_id, data, db)
-            
+            # Process command via Engine with a FRESH session/context
+            # We open a NEW session for each command to ensure data freshness and avoid stale state
+            with SessionLocal() as db:
+                await engine.process_command(player_id, data, db)
+                
     except Exception as e:
         print(f"WS Error: {e}")
         manager.disconnect(player_id)
-    finally:
-        db.close()
 

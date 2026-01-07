@@ -38,6 +38,10 @@
             {
                 "item_id": "armor_basic",
                 "rate": 0.1
+            },
+            {
+                "item_id": "cosmic_shard_4",
+                "rate": 0.2
             }
         ]
     },
@@ -53,7 +57,31 @@
             "int": 1,
             "vit": 20,
             "exp": 100
-        }
+        },
+        "drops": [
+            {
+                "item_id": "cosmic_shard_5",
+                "rate": 0.3
+            }
+        ]
+    },
+    "cyber_bioman": {
+        "id": "cyber_bioman",
+        "name": "Cyber Bioman",
+        "description": "A mechanically enhanced biological weapon. Extremely dangerous.",
+        "stats": {
+            "hp": 400,
+            "max_hp": 400,
+            "str": 30,
+            "vit": 25,
+            "exp": 800
+        },
+        "drops": [
+            {
+                "item_id": "cosmic_shard_6",
+                "rate": 0.5
+            }
+        ]
     },
     "vanguard_scout": {
         "id": "vanguard_scout",

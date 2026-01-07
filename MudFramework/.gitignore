@@ -1,7 +1,39 @@
+# Files to ignore in version control
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+*.egg-info/
+
+# Database
+mud.db
+mud_game.db
+*.db
+
+# Environment
 .env
-.venv
-env/
 venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Alembic
+alembic/versions/*.pyc
+
+# Testing
+.pytest_cache/
+/test_*.py
+!tests/
+
+# Temporary files
+*.log
+*.tmp
+/add_*.py
+/update_*.py

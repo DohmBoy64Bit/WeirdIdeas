@@ -19,6 +19,7 @@ class Player(Base):
     transformation = Column(String, default="Base")
     zeni = Column(Integer, default=100) # Starting currency
     equipment = Column(JSON, default={}) # {"weapon": None, "armor": None}
+    learned_skills = Column(JSON, default=[])  # List of skill IDs
     active_quests = Column(JSON, default={}) # {"quest_id": {"progress": 0}}
     completed_quests = Column(JSON, default=[]) # ["quest_id"]
     

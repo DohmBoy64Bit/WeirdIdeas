@@ -7,6 +7,7 @@ from app.models.race import Race
 from app.game.quest_manager import quest_manager
 from app.game.combat import CombatSystem, Mob
 from app.game.inventory_manager import inventory_manager
+from app.game.skills_manager import skills_manager
 import random
 import copy
 
@@ -36,8 +37,10 @@ class GameEngine:
                 await self.cmd_flee(player, db)
             elif verb in ["use", "item"]: 
                 await self.cmd_use(player, " ".join(args), db)
+            elif verb in ["skill", "sk"]:
+                await self.cmd_use_skill(player, " ".join(args), db)
             else:
-                await self.msg_system(player.id, "You are in combat! Valid commands: attack, flee, use")
+                await self.msg_system(player.id, "You are in combat! Valid commands: attack, flee, use, skill")
             return
 
         # NORMAL HANDLING
@@ -55,9 +58,7 @@ class GameEngine:
         elif verb == "transform":
             await self.cmd_transform(player, " ".join(args), db)
         elif verb == "revert":
-            player.transformation = "Base"
-            db.commit()
-            await self.msg_system(player.id, "You revert to your base form.")
+            await self.cmd_revert(player, db)
         elif verb in ["inventory", "i", "inv"]:
             await self.cmd_inventory(player)
         elif verb == "buy":
@@ -70,6 +71,12 @@ class GameEngine:
             await self.cmd_quests(player)
         elif verb == "wish":
             await self.cmd_wish(player, db)
+        elif verb in ["skills", "sk"]:
+            await self.cmd_skills(player, db)
+        elif verb in ["skillinfo", "si"]:
+            await self.cmd_skill_info(player, " ".join(args), db)
+        elif verb == "passive":
+            await self.cmd_passive(player)
         elif verb == "cheat_shards":
              # Dev Helper
              inv = list(player.inventory) if player.inventory else []
@@ -79,6 +86,35 @@ class GameEngine:
              flag_modified(player, "inventory")
              db.commit()
              await self.msg_system(player.id, "Cheater! You have the Shards.")
+        elif verb == "cheat_exp":
+             try:
+                 amount = int(args[0])
+                 await self.grant_exp(player, amount, db)
+                 await self.msg_system(player.id, f"Cheater! Gained {amount} EXP.")
+             except:
+                 await self.msg_system(player.id, "Usage: cheat_exp <amount>")
+        elif verb == "cheat_item":
+             try:
+                 i_id = args[0]
+                 item = inventory_manager.get_item(i_id)
+                 if item:
+                     inv = list(player.inventory) if player.inventory else []
+                     found = False
+                     for slot in inv:
+                         if slot["item_id"] == i_id:
+                             slot["qty"] += 1
+                             found = True
+                             break
+                     if not found:
+                         inv.append({"item_id": i_id, "qty": 1})
+                     player.inventory = inv
+                     flag_modified(player, "inventory")
+                     db.commit()
+                     await self.msg_system(player.id, f"Cheater! Obtained {item.name}.")
+                 else:
+                     await self.msg_system(player.id, "Invalid Item ID.")
+             except:
+                 await self.msg_system(player.id, "Usage: cheat_item <item_id>")
         else:
             await self.msg_system(player.id, "Unknown command.")
 
@@ -167,26 +203,19 @@ class GameEngine:
             }, player.id)
 
         if outcome["status"] == "win":
-            player.exp += outcome["exp"]
-            req_exp = player.level * 100
+            await self.grant_exp(player, outcome["exp"], db)
             
             logs = [f"You gained {outcome['exp']} EXP."]
             
-            if player.exp >= req_exp:
-                player.level += 1
-                player.exp -= req_exp
-                logs.append(f"LEVEL UP! You are now level {player.level}!")
-                
-                race = db.query(Race).filter(Race.name == player.race).first()
-                if race and race.scaling_stats:
-                    for k, v in race.scaling_stats.items():
-                        if k in player.stats:
-                            player.stats[k] = int(player.stats[k] + v)
-                    
-                    player.stats["max_hp"] = player.stats["vit"] * 10
-                    player.stats["hp"] = player.stats["max_hp"]
+            # Zenkai: Battle Hardened - +5% STR per win (max 50%)
+            if player.race == "Zenkai":
+                battle_bonus = player.stats.get("battle_hardened_bonus", 0)
+                if battle_bonus < 50:
+                    battle_bonus = min(50, battle_bonus + 5)
+                    player.stats["battle_hardened_bonus"] = battle_bonus
                     flag_modified(player, "stats")
-
+                    logs.append(f"[Battle Hardened] STR bonus: +{battle_bonus}%!")
+            
             # LOOT HANDLING
             if "loot" in outcome and outcome["loot"]:
                 inv = list(player.inventory) if player.inventory else []
@@ -232,6 +261,9 @@ class GameEngine:
 
             await self.msg_system(player.id, " ".join(logs))
             
+            # Restore flux to max when combat ends
+            player.stats["flux"] = player.stats.get("max_flux", 100)
+            
             player.combat_state = None
             if player.id in self.active_mobs: del self.active_mobs[player.id]
             db.commit()
@@ -240,15 +272,52 @@ class GameEngine:
             player.combat_state = None
             if player.id in self.active_mobs: del self.active_mobs[player.id]
             player.stats["hp"] = int(player.stats["max_hp"] * 0.5)
+            player.stats["flux"] = player.stats.get("max_flux", 100)  # Restore flux on revival
+            
+            # Zenkai: Reset Battle Hardened bonus on death
+            if player.race == "Zenkai" and "battle_hardened_bonus" in player.stats:
+                player.stats["battle_hardened_bonus"] = 0
+                
             flag_modified(player, "stats")
             player.current_map = "start_area"
             player.transformation = "Base"
             db.commit()
             await self.msg_system(player.id, f"You took fatal damage! Reviving at start with {player.stats['hp']} HP.")
             
+            
         elif outcome["status"] == "continue":
             player.combat_state["hp"] = outcome["mob_hp"]
-            player.stats["hp"] = temp_player.stats["hp"] 
+            player.stats["hp"] = temp_player.stats["hp"]
+            
+            # Regenerate Flux: 10% of max per round
+            max_flux = player.stats.get("max_flux", 100)
+            current_flux = player.stats.get("flux", 0)
+            flux_regen = int(max_flux * 0.10)
+            new_flux = min(max_flux, current_flux + flux_regen)
+            player.stats["flux"] = new_flux
+            
+            # Send Flux regen notification
+            if flux_regen > 0 and new_flux < max_flux:
+                await self.manager.send_personal_message({
+                    "type": "chat", "sender": "System", "content": f"⚡ Regenerated {flux_regen} Flux ({new_flux}/{max_flux})", "channel": "channel-combat"
+                }, player.id)
+            
+            # Reduce cooldowns
+            if "skill_cooldowns" in player.stats:
+                cooldowns = player.stats["skill_cooldowns"]
+                for skill_id in list(cooldowns.keys()):
+                    if cooldowns[skill_id] > 0:
+                        cooldowns[skill_id] -= 1
+                        if cooldowns[skill_id] <= 0:
+                            del cooldowns[skill_id]
+                            # Notify skill is ready
+                            skill = skills_manager.get_skill(skill_id)
+                            if skill:
+                                await self.manager.send_personal_message({
+                                    "type": "chat", "sender": "System", "content": f"✓ {skill.name} is ready!", "channel": "channel-info"
+                                }, player.id)
+                player.stats["skill_cooldowns"] = cooldowns
+            
             flag_modified(player, "combat_state")
             flag_modified(player, "stats")
             db.commit()
@@ -286,7 +355,9 @@ class GameEngine:
                 "stats": eff_stats,
                 "exp": player.exp,
                 "race": player.race,
-                "transformation": player.transformation
+                "transformation": player.transformation,
+                "zeni": player.zeni,
+                "inventory": player.inventory
             }
         }, player.id)
 
@@ -567,3 +638,402 @@ class GameEngine:
 
         await self.msg_system(player.id, f"You have gained 5 levels! (Level {old_level} -> {player.level})")
         await self.msg_system(player.id, "ARCHON: 'IT IS DONE.' (The shards dissipate into the void).")
+
+    async def grant_exp(self, player: Player, amount: int, db: Session):
+        player.exp += amount
+        
+        while True:
+            req_exp = player.level * 100
+            if player.exp >= req_exp:
+                player.level += 1
+                player.exp -= req_exp
+                
+                await self.msg_system(player.id, f"LEVEL UP! You are now level {player.level}!")
+                await self.manager.broadcast({
+                    "type": "chat", "sender": "System", "content": f"{player.name} has reached Level {player.level}!", "channel": "channel-info"
+                })
+                
+                race = db.query(Race).filter(Race.name == player.race).first()
+                if race and race.scaling_stats:
+                    for k, v in race.scaling_stats.items():
+                        if k in player.stats:
+                            player.stats[k] = int(player.stats[k] + v)
+                    
+                    player.stats["max_hp"] = int(player.stats["vit"] * 10)
+                    if player.stats["hp"] > player.stats["max_hp"]:
+                        player.stats["hp"] = player.stats["max_hp"]
+                    
+                    # Recalculate Flux: base_flux + (INT * 5)
+                    base_flux = race.base_flux if race.base_flux else 100
+                    player.stats["max_flux"] = base_flux + (player.stats.get("int", 0) * 5)
+                    player.stats["flux"] = player.stats["max_flux"]  # Restore to full on level up
+                    
+                # Auto-learn skills
+                available = skills_manager.get_available_skills(player.race, player.level)
+                current_skills = list(player.learned_skills) if player.learned_skills else []
+                new_skills_names = []
+                
+                for skill in available:
+                    if skill.id not in current_skills:
+                        current_skills.append(skill.id)
+                        new_skills_names.append(skill.name)
+                
+                if new_skills_names:
+                    player.learned_skills = current_skills
+                    flag_modified(player, "learned_skills")
+                    await self.msg_system(player.id, f"Learned new skills: {', '.join(new_skills_names)}")
+                    await self.manager.broadcast({
+                        "type": "chat", "sender": "System", "content": f"{player.name} learned {', '.join(new_skills_names)}!", "channel": "channel-info"
+                    })
+                flag_modified(player, "stats")
+                flag_modified(player, "exp")
+            else:
+                break
+        
+        db.commit()
+
+    async def cmd_skills(self, player: Player, db: Session):
+        """List available and learned skills."""
+        
+        all_skills = skills_manager.get_all_race_skills(player.race)
+        skill_cooldowns = player.stats.get("skill_cooldowns", {})
+        
+        # Build HTML Table
+        html = f"""
+        <div class="mt-2 mb-4 border border-gray-800 bg-gray-900/50 rounded p-4 font-mono whitespace-normal">
+            <h3 class="text-cyan-500 font-header text-lg border-b border-cyan-900/50 pb-2 mb-3 uppercase tracking-wider">
+                Skill Progression <span class="text-gray-500 text-sm">[{player.race}]</span>
+            </h3>
+            
+            <table class="w-full text-sm border-collapse">
+                <thead>
+                    <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-800">
+                        <th class="py-2 text-left w-1/4">Skill</th>
+                        <th class="py-2 text-center w-16">Lvl</th>
+                        <th class="py-2 text-center w-16">Flux</th>
+                        <th class="py-2 text-left">Description</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800/50">
+        """
+        
+        if not all_skills:
+             html += '<tr><td colspan="4" class="py-4 text-center text-gray-500 italic">No skills found.</td></tr>'
+        
+        for s in all_skills:
+            is_learned = s.id in player.learned_skills
+            is_available = player.level >= s.level_required
+            
+            # Row Styling
+            row_class = "hover:bg-gray-800/50 transition-colors"
+            name_class = "font-bold"
+            desc_class = "text-gray-400"
+            flux_val = f"{s.flux_cost}" if s.flux_cost > 0 else "-"
+            
+            # Status Icon/Logic
+            if is_learned:
+                status_display = '<span class="text-green-500">✔</span>'
+                name_class = "text-white"
+                
+                # Check cooldown
+                cd = skill_cooldowns.get(s.id, 0)
+                if cd > 0:
+                    status_display = f'<span class="text-red-500 font-bold">{cd}s</span>'
+                    
+            elif is_available:
+                status_display = '<span class="text-yellow-500 animate-pulse">🔓</span>'
+                name_class = "text-yellow-100"
+            else:
+                status_display = f'<span class="text-gray-600">Lv{s.level_required}</span>'
+                name_class = "text-gray-600"
+                desc_class = "text-gray-600 italic"
+                row_class = ""
+
+            html += f"""
+                <tr class="{row_class}">
+                    <td class="py-2 {name_class}">{s.name}</td>
+                    <td class="py-2 text-center">{status_display}</td>
+                    <td class="py-2 text-center text-cyan-600">{flux_val}</td>
+                    <td class="py-2 {desc_class}">{s.description}</td>
+                </tr>
+            """
+
+        html += """
+                </tbody>
+            </table>
+            <div class="mt-3 text-xs text-gray-600 text-center border-t border-gray-800 pt-2">
+                Type <span class="text-cyan-700">skillinfo &lt;name&gt;</span> for details.
+            </div>
+        </div>
+        """
+        
+        await self.msg_system(player.id, html)
+    
+    async def cmd_skill_info(self, player: Player, skill_name: str, db: Session):
+        """Show detailed information about a specific skill."""
+        if not skill_name:
+            await self.msg_system(player.id, "Usage: skillinfo <skill_name>")
+            return
+        
+        # Use simple name matching first
+        found_skill = None
+        s_name_lower = skill_name.lower()
+        
+        all_skills = skills_manager.get_all_race_skills(player.race)
+        
+        # Prioritize race skills first
+        for s in all_skills:
+             if s.name.lower() == s_name_lower:
+                 found_skill = s
+                 break
+        
+        # Fallback to global search if not found in race skills (e.g. checking other class skills for fun)
+        if not found_skill:
+             found_skill = skills_manager.get_skill_by_name(skill_name)
+
+        if not found_skill:
+            await self.msg_system(player.id, f"Skill '{skill_name}' not found.")
+            return
+
+        s = found_skill
+        skill_cooldowns = player.stats.get("skill_cooldowns", {})
+        
+        is_learned = s.id in player.learned_skills
+        status_color = "text-green-500" if is_learned else "text-gray-500"
+        status_text = "LEARNED" if is_learned else "NOT LEARNED"
+        if not is_learned and player.level < s.level_required:
+            status_color = "text-red-500"
+            status_text = "LOCKED"
+
+        # Construct Requirements HTML
+        req_html = ""
+        req_html += f'<div class="flex justify-between"><span class="text-gray-500">Level:</span> <span class="text-white">{s.level_required}</span></div>'
+        if s.race_required:
+             req_html += f'<div class="flex justify-between"><span class="text-gray-500">Race:</span> <span class="text-white">{s.race_required}</span></div>'
+        if s.transformation_required:
+             req_html += f'<div class="flex justify-between"><span class="text-gray-500">Form:</span> <span class="text-yellow-500">{s.transformation_required}</span></div>'
+             
+        # Construct Costs HTML
+        cost_html = ""
+        cost_html += f'<div class="flex justify-between"><span class="text-gray-500">Flux:</span> <span class="text-cyan-400">{s.flux_cost}</span></div>'
+        if s.hp_cost_percent > 0:
+            cost_html += f'<div class="flex justify-between"><span class="text-gray-500">HP Cost:</span> <span class="text-red-500">{s.hp_cost_percent}%</span></div>'
+        
+        # Cooldown Logic
+        cd_html = ""
+        if s.cooldown > 0:
+            current_cd = skill_cooldowns.get(s.id, 0)
+            cd_val = f"{s.cooldown} Rounds"
+            if current_cd > 0:
+                cd_val += f" <span class='text-red-400'>({current_cd} left)</span>"
+            else:
+                 cd_val += " <span class='text-green-500'>(Ready)</span>"
+            cd_html = f'<div class="flex justify-between mt-1 pt-1 border-t border-gray-800"><span class="text-gray-500">Cooldown:</span> <span class="text-gray-300">{cd_val}</span></div>'
+        
+        # Effects HTML
+        eff_html = ""
+        if s.damage_multiplier > 0:
+             eff_html += f'<li class="text-gray-300">Deals <span class="text-red-400 font-bold">{s.damage_multiplier}x</span> {s.stat_type.upper()} Dmg</li>'
+        if s.heal_percent > 0:
+             eff_html += f'<li class="text-gray-300">Heals <span class="text-green-400 font-bold">{s.heal_percent}%</span> HP</li>'
+        if s.skip_enemy_turn:
+             eff_html += f'<li class="text-yellow-400">Stuns Enemy (Skip Turn)</li>'
+        if s.damage_reduction > 0:
+             eff_html += f'<li class="text-blue-400">Reduces Damage by {int(s.damage_reduction * 100)}%</li>'
+        if s.defense_pierce_percent > 0:
+             eff_html += f'<li class="text-purple-400">Pierces {s.defense_pierce_percent}% Defense</li>'
+        if s.buff_stat:
+             eff_html += f'<li class="text-green-400">+{s.buff_percent}% {s.buff_stat.upper()} ({s.buff_duration} turns)</li>'
+        if s.dodge_chance > 0:
+             eff_html += f'<li class="text-blue-300">{int(s.dodge_chance*100)}% Dodge Chance</li>'
+
+        if not eff_html:
+            eff_html = '<li class="text-gray-500 italic">No direct special effects.</li>'
+
+        html = f"""
+        <div class="mt-2 mb-4 max-w-lg border border-gray-700 bg-gray-900 rounded overflow-hidden font-mono shadow-lg whitespace-normal">
+            <!-- Header -->
+            <div class="bg-gray-800 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white uppercase tracking-wider">{s.name}</h3>
+                <span class="text-xs font-bold border px-2 py-0.5 rounded {status_color} border-current">{status_text}</span>
+            </div>
+            
+            <div class="p-4 space-y-4">
+                
+                <!-- Description -->
+                <div class="italic text-gray-400 text-sm border-l-2 border-cyan-800 pl-3">
+                    "{s.description}"
+                </div>
+                
+                <!-- Grid Stats -->
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-black/30 p-2 rounded border border-gray-800">
+                        <h4 class="text-cyan-600 font-bold text-xs uppercase mb-1 border-b border-gray-800 pb-1">Requirements</h4>
+                        {req_html}
+                    </div>
+                    <div class="bg-black/30 p-2 rounded border border-gray-800">
+                        <h4 class="text-red-500 font-bold text-xs uppercase mb-1 border-b border-gray-800 pb-1">Cost</h4>
+                        {cost_html}
+                        {cd_html}
+                    </div>
+                </div>
+
+                <!-- Effects Section -->
+                <div>
+                     <h4 class="text-gray-500 font-bold text-xs uppercase mb-1">Combat Effects</h4>
+                     <ul class="list-disc list-inside space-y-0.5 text-sm">
+                        {eff_html}
+                     </ul>
+                </div>
+
+            </div>
+        </div>
+        """
+        
+        await self.msg_system(player.id, html)
+    
+    async def cmd_passive(self, player: Player):
+        """Show race passive ability."""
+        passive = skills_manager.get_race_passive(player.race)
+        msg = f"**Race Passive: {passive['name']}**\n{passive['description']}"
+        await self.msg_system(player.id, msg)
+
+    async def cmd_use_skill(self, player: Player, skill_name: str, db: Session):
+        """Use a skill in combat."""
+        if not player.combat_state:
+            await self.msg_system(player.id, "You can only use skills in combat!")
+            return
+        
+        if not skill_name:
+            await self.msg_system(player.id, "Usage: skill <skill_name>")
+            return
+        
+        # Find skill by name
+        target_skill = skills_manager.get_skill_by_name(skill_name)
+        
+        if not target_skill:
+            await self.msg_system(player.id, f"Unknown skill '{skill_name}'.")
+            return
+            
+        if target_skill.id not in player.learned_skills:
+             await self.msg_system(player.id, f"You haven't learned {target_skill.name} yet.")
+             return
+        
+        # Check if can use
+        can_use, error = skills_manager.can_use_skill(target_skill.id, player.race, player.level, player.transformation)
+        if not can_use:
+            await self.msg_system(player.id, error)
+            return
+        
+        # Check cooldown
+        skill_cooldowns = player.stats.get("skill_cooldowns", {})
+        if target_skill.id in skill_cooldowns and skill_cooldowns[target_skill.id] > 0:
+            remaining = skill_cooldowns[target_skill.id]
+            await self.msg_system(player.id, f"{target_skill.name} is on cooldown! {remaining} rounds remaining.")
+            return
+        
+        # Check Flux cost
+        current_flux = player.stats.get("flux", 0)
+        flux_cost = target_skill.flux_cost
+        if current_flux < flux_cost:
+            await self.msg_system(player.id, f"Not enough Flux! Need {flux_cost}, have {current_flux}.")
+            return
+        
+        # Deduct Flux and log it
+        player.stats["flux"] = current_flux - flux_cost
+        flag_modified(player, "stats")
+        db.commit()
+        
+        # Send Flux change notification
+        await self.manager.send_personal_message({
+            "type": "chat", "sender": "System", "content": f"⚡ Used {flux_cost} Flux ({current_flux - flux_cost}/{player.stats.get('max_flux', 100)} remaining)", "channel": "channel-combat"
+        }, player.id)
+        
+        # Set cooldown if skill has one
+        if target_skill.cooldown > 0:
+            if "skill_cooldowns" not in player.stats:
+                player.stats["skill_cooldowns"] = {}
+            player.stats["skill_cooldowns"][target_skill.id] = target_skill.cooldown
+            flag_modified(player, "stats")
+            db.commit()
+        
+        # Execute skill in combat
+        mob = self.active_mobs.get(player.id)
+        if not mob and player.combat_state:
+             mob = self.combat_system.spawn_mob(player.combat_state["mob_id"])
+             mob.stats["hp"] = player.combat_state["hp"]
+             self.active_mobs[player.id] = mob
+
+        if not mob:
+            player.combat_state = None
+            db.commit()
+            return
+
+        eff_stats = calculate_effective_stats(player.stats, player.transformation)
+        
+        class TempPlayer:
+            def __init__(self, stats): self.stats = stats
+        
+        temp_player = TempPlayer(eff_stats)
+
+        outcome = await self.combat_system.combat_round(temp_player, mob, "skill", skill=target_skill)
+        
+        for line in outcome["log"]:
+             await self.manager.send_personal_message({
+                 "type": "chat", "sender": "Combat", "content": line, "channel": "channel-combat"
+            }, player.id)
+
+        # Handle combat end
+        if outcome["status"] == "win":
+            await self.grant_exp(player, outcome["exp"], db)
+            
+            logs = [f"You gained {outcome['exp']} EXP."]
+            
+            # LOOT HANDLING
+            if "loot" in outcome and outcome["loot"]:
+                inv = list(player.inventory) if player.inventory else []
+                new_items = []
+                for item_id in outcome["loot"]:
+                    item = inventory_manager.get_item(item_id)
+                    if item:
+                        found = False
+                        for slot in inv:
+                            if slot["item_id"] == item_id:
+                                slot["qty"] += 1
+                                found = True
+                                break
+                        if not found:
+                            inv.append({"item_id": item_id, "qty": 1})
+                        new_items.append(item.name)
+                
+                if new_items:
+                    player.inventory = inv
+                    flag_modified(player, "inventory")
+                    logs.append(f"Loot dropped: {', '.join(new_items)}")
+
+            await self.msg_system(player.id, " ".join(logs))
+            
+            player.combat_state = None
+            if player.id in self.active_mobs: del self.active_mobs[player.id]
+            db.commit()
+            
+        elif outcome["status"] == "loss":
+            player.combat_state = None
+            if player.id in self.active_mobs: del self.active_mobs[player.id]
+            player.stats["hp"] = int(player.stats["max_hp"] * 0.5)
+            flag_modified(player, "stats")
+            player.current_map = "start_area"
+            player.transformation = "Base"
+            db.commit()
+            await self.msg_system(player.id, f"You took fatal damage! Reviving at start with {player.stats['hp']} HP.")
+            
+        elif outcome["status"] == "continue":
+            player.combat_state["hp"] = outcome["mob_hp"]
+            player.stats["hp"] = temp_player.stats["hp"] 
+            flag_modified(player, "combat_state")
+            flag_modified(player, "stats")
+            db.commit()
+            
+        # Update UI
+        await self.cmd_look(player, [])
+

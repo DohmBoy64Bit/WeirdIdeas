@@ -30,16 +30,38 @@ def get_available_transformations(race: str, level: int) -> list:
     return [name for name, data in TRANSFORMATIONS.items() 
             if data["race"] == race and level >= data["req_level"]]
 
-def calculate_effective_stats(player_stats: Dict, transformation: str) -> Dict:
-    data = TRANSFORMATIONS.get(transformation)
-    if not data:
-        return player_stats.copy()
-
-    mult = data["mult"]
-    new_stats = {}
-    for k, v in player_stats.items():
-        if isinstance(v, (int, float)):
-             new_stats[k] = int(v * mult)
+def calculate_effective_stats(base_stats, transformation_name="Base"):
+    """Apply transformation multipliers to base stats and passives."""
+    if transformation_name == "Base":
+        return base_stats.copy()
+    
+    transformation = get_transformation(transformation_name)
+    if not transformation:
+        return base_stats.copy()
+    
+    effective = {}
+    # The original TRANSFORMATIONS structure uses a single 'mult' key.
+    # This logic assumes a 'multipliers' dictionary within the transformation data.
+    # For this change, we'll adapt to the existing 'mult' key for general stats
+    # and assume 'multipliers' might be added later or is implied for specific stats.
+    # If 'multipliers' is not present, it will fall back to the general 'mult'.
+    
+    general_mult = transformation.get("mult", 1.0) # Default to 1.0 if no general multiplier
+    
+    for stat, value in base_stats.items():
+        # Check if there's a specific multiplier for this stat
+        if "multipliers" in transformation and stat in transformation["multipliers"]:
+            effective[stat] = int(value * transformation["multipliers"][stat])
+        elif isinstance(value, (int, float)): # Apply general multiplier if it's a numeric stat
+            effective[stat] = int(value * general_mult)
         else:
-             new_stats[k] = v
-    return new_stats
+            effective[stat] = value
+    
+    # Apply Zenkai: Battle Hardened passive (STR bonus)
+    if "battle_hardened_bonus" in base_stats:
+        bonus_percent = base_stats["battle_hardened_bonus"]
+        if "str" in effective:
+            str_bonus = int(effective["str"] * (bonus_percent / 100))
+            effective["str"] += str_bonus
+    
+    return effective

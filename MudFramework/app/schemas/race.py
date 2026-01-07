@@ -6,9 +6,14 @@ class RaceBase(BaseModel):
     description: str
     base_stats: Dict
 
-class RaceResponse(RaceBase):
+class RaceResponse(BaseModel):
     id: int
-    transformations: List[str]
+    name: str
+    description: str
+    base_stats: dict
+    scaling_stats: dict
+    transformations: list
+    base_flux: int = 100  # Default value if not present
 
     class Config:
         from_attributes = True
