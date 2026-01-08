@@ -1,6 +1,9 @@
 import json
 import os
 from typing import Dict, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 class QuestManager:
     def __init__(self):
@@ -15,15 +18,17 @@ class QuestManager:
         try:
             with open(os.path.join(base_path, "data", "npcs.json"), "r") as f:
                 self.npcs = json.load(f)
+            logger.info(f"Loaded {len(self.npcs)} NPCs.")
         except Exception as e:
-            print(f"Error loading NPCs: {e}")
+            logger.error(f"Error loading NPCs: {e}", exc_info=True)
 
         # Load Quests
         try:
             with open(os.path.join(base_path, "data", "quests.json"), "r") as f:
                 self.quests = json.load(f)
+            logger.info(f"Loaded {len(self.quests)} quests.")
         except Exception as e:
-            print(f"Error loading Quests: {e}")
+            logger.error(f"Error loading Quests: {e}", exc_info=True)
 
     def get_npc_by_room(self, room_id: str) -> Optional[Dict]:
         for npc in self.npcs.values():

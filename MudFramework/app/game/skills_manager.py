@@ -1,6 +1,9 @@
 import json
 import os
 from typing import Dict, List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Skill:
     def __init__(self, data: Dict):
@@ -51,9 +54,9 @@ class SkillsManager:
                 data = json.load(f)
                 for skill_id, skill_data in data.items():
                     self.skills[skill_id] = Skill(skill_data)
-            print(f"Loaded {len(self.skills)} skills.")
+            logger.info(f"Loaded {len(self.skills)} skills.")
         except Exception as e:
-            print(f"Error loading skills: {e}")
+            logger.error(f"Error loading skills: {e}", exc_info=True)
 
     def get_skill(self, skill_id: str) -> Optional[Skill]:
         return self.skills.get(skill_id)

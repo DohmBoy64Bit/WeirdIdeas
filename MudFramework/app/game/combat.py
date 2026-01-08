@@ -3,6 +3,10 @@ import os
 import random
 from typing import Dict, Optional
 from app.game.skills_manager import skills_manager, Skill
+from app.core.constants import VITALIS_REGEN_PERCENT, GLACIAL_ICE_ARMOR_REDUCTION
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Mob:
     def __init__(self, data: Dict):
@@ -24,8 +28,9 @@ class CombatSystem:
         try:
             with open(data_path, "r") as f:
                 self.mobs_data = json.load(f)
+            logger.info(f"Loaded {len(self.mobs_data)} mobs.")
         except Exception as e:
-            print(f"Error loading mobs: {e}")
+            logger.error(f"Error loading mobs: {e}", exc_info=True)
 
     def spawn_mob(self, mob_id: str) -> Optional[Mob]:
         data = self.mobs_data.get(mob_id)
@@ -64,10 +69,10 @@ class CombatSystem:
         results = []
         player_race = getattr(player, 'race', None)
         
-        # Vitalis: Regeneration - 5% max HP at start of round
+        # Vitalis: Regeneration - VITALIS_REGEN_PERCENT% max HP at start of round
         if player_race == "Vitalis":
             max_hp = player.stats.get("max_hp", 100)
-            regen = int(max_hp * 0.05)
+            regen = int(max_hp * VITALIS_REGEN_PERCENT)
             player.stats["hp"] = min(max_hp, player.stats["hp"] + regen)
             results.append(f"[Regeneration] You recover {regen} HP!")
         
@@ -138,9 +143,9 @@ class CombatSystem:
                 mob_dmg = int(mob_dmg * (1 - skill.damage_reduction))
                 results.append(f"Your shield absorbs some damage!")
             
-            # Glacial: Ice Armor - 10% damage reduction
+            # Glacial: Ice Armor - GLACIAL_ICE_ARMOR_REDUCTION% damage reduction
             if player_race == "Glacial":
-                ice_reduction = int(mob_dmg * 0.10)
+                ice_reduction = int(mob_dmg * GLACIAL_ICE_ARMOR_REDUCTION)
                 mob_dmg -= ice_reduction
                 results.append(f"[Ice Armor] Reduced damage by {ice_reduction}!")
             

@@ -1,6 +1,9 @@
 import json
 import os
 from typing import Dict, Optional, List
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Room:
     def __init__(self, data):
@@ -26,9 +29,9 @@ class World:
                 data = json.load(f)
                 for room_id, room_data in data.items():
                     self.rooms[room_id] = Room(room_data)
-            print(f"Loaded {len(self.rooms)} rooms.")
+            logger.info(f"Loaded {len(self.rooms)} rooms.")
         except Exception as e:
-            print(f"Error loading rooms: {e}")
+            logger.error(f"Error loading rooms: {e}", exc_info=True)
 
     def get_room(self, room_id: str) -> Optional[Room]:
         return self.rooms.get(room_id)

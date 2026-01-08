@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.player import Player
 from app.models.race import Race
 from app.schemas.player import PlayerCreate, PlayerResponse
+from app.core.constants import BASE_FLUX, FLUX_PER_INT
 
 router = APIRouter()
 
@@ -27,9 +28,9 @@ def create_player(player_in: PlayerCreate, current_user: User = Depends(deps.get
     stats["hp"] = stats["vit"] * 10
     stats["max_hp"] = stats["vit"] * 10
     
-    # Initialize Flux: base_flux + (INT * 5)
-    base_flux = race.base_flux if race.base_flux else 100
-    max_flux = base_flux + (stats.get("int", 0) * 5)
+    # Initialize Flux: base_flux + (INT * FLUX_PER_INT)
+    base_flux = race.base_flux if race.base_flux else BASE_FLUX
+    max_flux = base_flux + (stats.get("int", 0) * FLUX_PER_INT)
     stats["flux"] = max_flux
     stats["max_flux"] = max_flux
     

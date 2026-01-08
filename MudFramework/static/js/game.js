@@ -127,7 +127,7 @@ function updateStats(p) {
 // --- WebSocket ---
 
 function connectWS(playerId) {
-    socket = new WebSocket(`${WS_URL}/${playerId}?token=${token}`);
+    socket = new WebSocket(`${WS_URL}?token=${token}`);
 
     socket.onopen = () => {
         els.status.textContent = "Connected";

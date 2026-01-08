@@ -1,6 +1,9 @@
 import json
 import os
 from typing import Dict, Optional, List
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Item:
     def __init__(self, data: Dict):
@@ -27,15 +30,17 @@ class InventoryManager:
                 data = json.load(f)
                 for k, v in data.items():
                     self.items[k] = Item(v)
+            logger.info(f"Loaded {len(self.items)} items.")
         except Exception as e:
-            print(f"Error loading items: {e}")
+            logger.error(f"Error loading items: {e}", exc_info=True)
 
         # Load Shops
         try:
             with open(os.path.join(base_path, "data", "shops.json"), "r") as f:
                 self.shops = json.load(f)
+            logger.info(f"Loaded {len(self.shops)} shops.")
         except Exception as e:
-             print(f"Error loading shops: {e}")
+            logger.error(f"Error loading shops: {e}", exc_info=True)
 
     def get_item(self, item_id: str) -> Optional[Item]:
         return self.items.get(item_id)

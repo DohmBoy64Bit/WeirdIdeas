@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
+from typing import Dict, List, Optional, Any
 from app.models.player import Player
 from app.game.world import world
 from app.game.transformations import get_transformation, get_available_transformations, calculate_effective_stats
@@ -8,16 +9,38 @@ from app.game.quest_manager import quest_manager
 from app.game.combat import CombatSystem, Mob
 from app.game.inventory_manager import inventory_manager
 from app.game.skills_manager import skills_manager
+from app.core.config import settings
+from app.core.constants import (
+    REVIVE_HP_PERCENT, FLEE_SUCCESS_CHANCE, VITALIS_REGEN_PERCENT,
+    GLACIAL_ICE_ARMOR_REDUCTION, ZENKAI_BATTLE_HARDENED_MAX,
+    ZENKAI_BATTLE_HARDENED_INCREMENT, FLUX_REGEN_PERCENT, BASE_FLUX,
+    FLUX_PER_INT, EXP_PER_LEVEL, WISH_LEVEL_BONUS, MAX_COMMAND_LENGTH
+)
+from app.core.messages import GameMessages
 import random
 import copy
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GameEngine:
+    """Main game engine that processes player commands and manages game state."""
+    
     def __init__(self, connection_manager):
+        """Initialize the game engine with a connection manager."""
         self.manager = connection_manager
         self.combat_system = CombatSystem(self.manager)
-        self.active_mobs = {} 
+        self.active_mobs = {}  # In-memory storage of active combat mobs
 
-    async def process_command(self, player_id: int, command: str, db: Session):
+    async def process_command(self, player_id: int, command: str, db: Session) -> None:
+        """
+        Process a game command from a player.
+        
+        Args:
+            player_id: The ID of the player issuing the command
+            command: The command string to process
+            db: Database session
+        """
         player = db.query(Player).filter(Player.id == player_id).first()
         if not player:
             return
@@ -40,7 +63,7 @@ class GameEngine:
             elif verb in ["skill", "sk"]:
                 await self.cmd_use_skill(player, " ".join(args), db)
             else:
-                await self.msg_system(player.id, "You are in combat! Valid commands: attack, flee, use, skill")
+                await self.msg_system(player.id, GameMessages.IN_COMBAT)
             return
 
         # NORMAL HANDLING
@@ -80,7 +103,11 @@ class GameEngine:
         elif verb == "passive":
             await self.cmd_passive(player)
         elif verb == "cheat_shards":
-             # Dev Helper
+             # Dev Helper - Only available in DEBUG_MODE
+             if not settings.DEBUG_MODE:
+                 await self.msg_system(player.id, GameMessages.UNKNOWN_COMMAND)
+                 return
+             logger.warning(f"DEBUG: cheat_shards used by player {player_id}")
              inv = list(player.inventory) if player.inventory else []
              for i in range(1, 8):
                  inv.append({"item_id": f"cosmic_shard_{i}", "qty": 1})
@@ -89,17 +116,28 @@ class GameEngine:
              db.commit()
              await self.msg_system(player.id, "Cheater! You have the Shards.")
         elif verb == "cheat_exp":
+             if not settings.DEBUG_MODE:
+                 await self.msg_system(player.id, GameMessages.UNKNOWN_COMMAND)
+                 return
              try:
                  amount = int(args[0])
+                 logger.warning(f"DEBUG: cheat_exp used by player {player_id}: {amount}")
                  await self.grant_exp(player, amount, db)
                  await self.msg_system(player.id, f"Cheater! Gained {amount} EXP.")
-             except:
+             except (ValueError, IndexError):
                  await self.msg_system(player.id, "Usage: cheat_exp <amount>")
+             except Exception as e:
+                 logger.error(f"Error in cheat_exp for player {player_id}: {e}", exc_info=True)
+                 await self.msg_system(player.id, "An error occurred.")
         elif verb == "cheat_item":
+             if not settings.DEBUG_MODE:
+                 await self.msg_system(player.id, GameMessages.UNKNOWN_COMMAND)
+                 return
              try:
                  i_id = args[0]
                  item = inventory_manager.get_item(i_id)
                  if item:
+                     logger.warning(f"DEBUG: cheat_item used by player {player_id}: {i_id}")
                      inv = list(player.inventory) if player.inventory else []
                      found = False
                      for slot in inv:
@@ -115,10 +153,13 @@ class GameEngine:
                      await self.msg_system(player.id, f"Cheater! Obtained {item.name}.")
                  else:
                      await self.msg_system(player.id, "Invalid Item ID.")
-             except:
+             except IndexError:
                  await self.msg_system(player.id, "Usage: cheat_item <item_id>")
+             except Exception as e:
+                 logger.error(f"Error in cheat_item for player {player_id}: {e}", exc_info=True)
+                 await self.msg_system(player.id, "An error occurred.")
         else:
-            await self.msg_system(player.id, "Unknown command.")
+            await self.msg_system(player.id, GameMessages.UNKNOWN_COMMAND)
 
     async def cmd_transform(self, player: Player, form_name: str, db: Session):
         avail = get_available_transformations(player.race, player.level)
@@ -135,12 +176,12 @@ class GameEngine:
         if target_form:
             player.transformation = target_form
             db.commit()
-            await self.msg_system(player.id, f"You scream in power and transform into {target_form}!")
+            await self.msg_system(player.id, GameMessages.TRANSFORMED.format(form=target_form))
             await self.manager.send_personal_message({
                  "type": "chat", "sender": "System", "content": "Your power has multiplied!", "channel": "channel-info"
             }, player.id)
         else:
-            await self.msg_system(player.id, "You cannot transform into that.")
+            await self.msg_system(player.id, GameMessages.CANNOT_TRANSFORM)
 
     async def cmd_hunt(self, player: Player, db: Session):
         room = world.get_room(player.current_map)
@@ -150,17 +191,24 @@ class GameEngine:
             player.current_map = start_room.id
             db.commit()
             room = start_room
-            await self.msg_system(player.id, "You were lost in the void and returned to reality.")
+            await self.msg_system(player.id, GameMessages.LOST_IN_VOID)
 
         if not room.mobs:
-            await self.msg_system(player.id, "There is nothing to hunt here.")
+            await self.msg_system(player.id, GameMessages.NOTHING_TO_HUNT)
             return
 
         mob_id = random.choice(room.mobs)
         mob = self.combat_system.spawn_mob(mob_id)
         
         if mob:
-            player.combat_state = {"mob_id": mob.id, "hp": mob.stats["hp"], "max_hp": mob.stats["max_hp"]}
+            # Store full mob state in combat_state for persistence
+            player.combat_state = {
+                "mob_id": mob.id,
+                "mob_name": mob.name,
+                "mob_hp": mob.stats["hp"],
+                "mob_max_hp": mob.stats["max_hp"],
+                "mob_stats": mob.stats.copy()  # Full mob stats for recovery
+            }
             flag_modified(player, "combat_state")
             
             if "hp" not in player.stats:
@@ -171,29 +219,57 @@ class GameEngine:
             db.commit()
             self.active_mobs[player.id] = mob
             
-            await self.msg_system(player.id, f"You found a {mob.name}! Combat started!")
+            await self.msg_system(player.id, GameMessages.FOUND_MOB.format(mob_name=mob.name))
             await self.manager.send_personal_message({
                  "type": "chat", "sender": "Combat", "content": f"{mob.name} engages you!", "channel": "channel-combat"
             }, player.id)
         else:
             await self.msg_system(player.id, "You found nothing (Error spawning mob).")
 
-    async def cmd_attack_round(self, player: Player, db: Session):
+    def _get_or_recover_mob(self, player: Player, db: Session) -> Optional[Mob]:
+        """
+        Get mob from memory or recover from database combat_state.
+        
+        Args:
+            player: The player in combat
+            db: Database session
+            
+        Returns:
+            Mob instance or None if combat state is invalid
+        """
         mob = self.active_mobs.get(player.id)
         if not mob and player.combat_state:
-             mob = self.combat_system.spawn_mob(player.combat_state["mob_id"])
-             mob.stats["hp"] = player.combat_state["hp"]
-             self.active_mobs[player.id] = mob
-
+            # Recover mob from combat_state (persistence)
+            mob_id = player.combat_state.get("mob_id")
+            if mob_id:
+                mob = self.combat_system.spawn_mob(mob_id)
+                if mob and "mob_stats" in player.combat_state:
+                    # Restore mob stats from saved state
+                    mob.stats = player.combat_state["mob_stats"].copy()
+                    mob.stats["hp"] = player.combat_state.get("mob_hp", mob.stats["hp"])
+                    self.active_mobs[player.id] = mob
+                    logger.info(f"Recovered mob {mob_id} for player {player.id} from combat_state")
+        
         if not mob:
+            # Clear invalid combat state
             player.combat_state = None
+            flag_modified(player, "combat_state")
             db.commit()
+            return None
+        
+        return mob
+
+    async def cmd_attack_round(self, player: Player, db: Session) -> None:
+        """Process an attack round in combat."""
+        mob = self._get_or_recover_mob(player, db)
+        if not mob:
             return
 
         eff_stats = calculate_effective_stats(player.stats, player.transformation)
         
         class TempPlayer:
-            def __init__(self, stats): self.stats = stats
+            def __init__(self, stats: Dict[str, Any]): 
+                self.stats = stats
         
         temp_player = TempPlayer(eff_stats)
 
@@ -205,130 +281,190 @@ class GameEngine:
             }, player.id)
 
         if outcome["status"] == "win":
-            await self.grant_exp(player, outcome["exp"], db)
-            
-            logs = [f"You gained {outcome['exp']} EXP."]
-            
-            # Zenkai: Battle Hardened - +5% STR per win (max 50%)
-            if player.race == "Zenkai":
-                battle_bonus = player.stats.get("battle_hardened_bonus", 0)
-                if battle_bonus < 50:
-                    battle_bonus = min(50, battle_bonus + 5)
-                    player.stats["battle_hardened_bonus"] = battle_bonus
-                    flag_modified(player, "stats")
-                    logs.append(f"[Battle Hardened] STR bonus: +{battle_bonus}%!")
-            
-            # LOOT HANDLING
-            if "loot" in outcome and outcome["loot"]:
-                inv = list(player.inventory) if player.inventory else []
-                new_items = []
-                for item_id in outcome["loot"]:
-                    item = inventory_manager.get_item(item_id)
-                    if item:
-                        found = False
-                        for slot in inv:
-                            if slot["item_id"] == item_id:
-                                slot["qty"] += 1
-                                found = True
-                                break
-                        if not found:
-                            inv.append({"item_id": item_id, "qty": 1})
-                        new_items.append(item.name)
-                
-                if new_items:
-                    player.inventory = inv
-                    flag_modified(player, "inventory")
-                    logs.append(f"Loot dropped: {', '.join(new_items)}")
-
-            # QUEST HOOK: KILL UPDATE
-            mob_id = player.combat_state["mob_id"]
-            updated_quests = False
-
-            if player.active_quests:
-                active = copy.deepcopy(player.active_quests)
-                
-                for q_id, progress in active.items():
-                    quest = quest_manager.get_quest(q_id)
-                    if not quest: continue
-                    
-                    if quest["type"] == "kill" and quest["target"] == mob_id:
-                        if progress["progress"] < quest["count"]:
-                            progress["progress"] += 1
-                            updated_quests = True
-                            logs.append(f"Quest Update: {quest['title']} ({progress['progress']}/{quest['count']})")
-                
-                if updated_quests:
-                     player.active_quests = active
-                     flag_modified(player, "active_quests")
-
-            await self.msg_system(player.id, " ".join(logs))
-            
-            # Restore flux to max when combat ends
-            player.stats["flux"] = player.stats.get("max_flux", 100)
-            
-            player.combat_state = None
-            if player.id in self.active_mobs: del self.active_mobs[player.id]
-            db.commit()
-            
+            await self._handle_combat_win(player, outcome, db)
         elif outcome["status"] == "loss":
-            player.combat_state = None
-            if player.id in self.active_mobs: del self.active_mobs[player.id]
-            player.stats["hp"] = int(player.stats["max_hp"] * 0.5)
-            player.stats["flux"] = player.stats.get("max_flux", 100)  # Restore flux on revival
-            
-            # Zenkai: Reset Battle Hardened bonus on death
-            if player.race == "Zenkai" and "battle_hardened_bonus" in player.stats:
-                player.stats["battle_hardened_bonus"] = 0
-                
-            flag_modified(player, "stats")
-            player.current_map = "start_area"
-            player.transformation = "Base"
-            db.commit()
-            await self.msg_system(player.id, f"You took fatal damage! Reviving at start with {player.stats['hp']} HP.")
-            
-            
+            await self._handle_combat_loss(player, db)
         elif outcome["status"] == "continue":
-            player.combat_state["hp"] = outcome["mob_hp"]
-            player.stats["hp"] = temp_player.stats["hp"]
-            
-            # Regenerate Flux: 10% of max per round
-            max_flux = player.stats.get("max_flux", 100)
-            current_flux = player.stats.get("flux", 0)
-            flux_regen = int(max_flux * 0.10)
-            new_flux = min(max_flux, current_flux + flux_regen)
-            player.stats["flux"] = new_flux
-            
-            # Send Flux regen notification
-            if flux_regen > 0 and new_flux < max_flux:
-                await self.manager.send_personal_message({
-                    "type": "chat", "sender": "System", "content": f"⚡ Regenerated {flux_regen} Flux ({new_flux}/{max_flux})", "channel": "channel-combat"
-                }, player.id)
-            
-            # Reduce cooldowns
-            if "skill_cooldowns" in player.stats:
-                cooldowns = player.stats["skill_cooldowns"]
-                for skill_id in list(cooldowns.keys()):
-                    if cooldowns[skill_id] > 0:
-                        cooldowns[skill_id] -= 1
-                        if cooldowns[skill_id] <= 0:
-                            del cooldowns[skill_id]
-                            # Notify skill is ready
-                            skill = skills_manager.get_skill(skill_id)
-                            if skill:
-                                await self.manager.send_personal_message({
-                                    "type": "chat", "sender": "System", "content": f"✓ {skill.name} is ready!", "channel": "channel-info"
-                                }, player.id)
-                player.stats["skill_cooldowns"] = cooldowns
-            
-            flag_modified(player, "combat_state")
-            flag_modified(player, "stats")
-            db.commit()
-            
+            await self._handle_combat_continue(player, outcome, temp_player, mob, db)
+        
         # Update UI
         await self.refresh_ui(player)
 
+    async def _handle_combat_win(self, player: Player, outcome: Dict[str, Any], db: Session) -> None:
+        """Handle combat victory: grant exp, loot, quest updates."""
+        await self.grant_exp(player, outcome["exp"], db)
+        
+        logs = [GameMessages.EXP_GAINED.format(exp=outcome["exp"])]
+        
+        # Zenkai: Battle Hardened bonus
+        if player.race == "Zenkai":
+            battle_bonus = player.stats.get("battle_hardened_bonus", 0)
+            if battle_bonus < ZENKAI_BATTLE_HARDENED_MAX:
+                battle_bonus = min(ZENKAI_BATTLE_HARDENED_MAX, battle_bonus + ZENKAI_BATTLE_HARDENED_INCREMENT)
+                player.stats["battle_hardened_bonus"] = battle_bonus
+                flag_modified(player, "stats")
+                logs.append(GameMessages.BATTLE_HARDENED.format(bonus=battle_bonus))
+        
+        # Process loot
+        if "loot" in outcome and outcome["loot"]:
+            loot_items = await self._process_loot(player, outcome["loot"], db)
+            if loot_items:
+                logs.append(GameMessages.LOOT_DROPPED.format(items=", ".join(loot_items)))
+
+        # Update quest progress
+        if player.combat_state:
+            quest_logs = await self._update_quest_progress(player, player.combat_state["mob_id"], db)
+            logs.extend(quest_logs)
+
+        await self.msg_system(player.id, " ".join(logs))
+        
+        # Restore flux to max when combat ends
+        player.stats["flux"] = player.stats.get("max_flux", BASE_FLUX)
+        
+        # Clear combat state
+        player.combat_state = None
+        flag_modified(player, "combat_state")
+        if player.id in self.active_mobs:
+            del self.active_mobs[player.id]
+        db.commit()
+
+    async def _handle_combat_loss(self, player: Player, db: Session) -> None:
+        """Handle combat defeat: revive player, reset state."""
+        player.combat_state = None
+        flag_modified(player, "combat_state")
+        if player.id in self.active_mobs:
+            del self.active_mobs[player.id]
+        
+        player.stats["hp"] = int(player.stats["max_hp"] * REVIVE_HP_PERCENT)
+        player.stats["flux"] = player.stats.get("max_flux", BASE_FLUX)
+        
+        # Zenkai: Reset Battle Hardened bonus on death
+        if player.race == "Zenkai" and "battle_hardened_bonus" in player.stats:
+            player.stats["battle_hardened_bonus"] = 0
+            
+        flag_modified(player, "stats")
+        player.current_map = "start_area"
+        player.transformation = "Base"
+        db.commit()
+        await self.msg_system(player.id, GameMessages.FATAL_DAMAGE.format(hp=player.stats["hp"]))
+
+    async def _handle_combat_continue(self, player: Player, outcome: Dict[str, Any], 
+                                     temp_player: Any, mob: Mob, db: Session) -> None:
+        """Handle combat continuation: update HP, regen flux, reduce cooldowns."""
+        # Update combat state with mob HP (for persistence)
+        if player.combat_state:
+            player.combat_state["mob_hp"] = outcome["mob_hp"]
+            if "mob_stats" in player.combat_state:
+                player.combat_state["mob_stats"]["hp"] = outcome["mob_hp"]
+            # Also update in-memory mob
+            if player.id in self.active_mobs:
+                self.active_mobs[player.id].stats["hp"] = outcome["mob_hp"]
+            flag_modified(player, "combat_state")
+        
+        player.stats["hp"] = temp_player.stats["hp"]
+        
+        # Regenerate Flux
+        max_flux = player.stats.get("max_flux", BASE_FLUX)
+        current_flux = player.stats.get("flux", 0)
+        flux_regen = int(max_flux * FLUX_REGEN_PERCENT)
+        new_flux = min(max_flux, current_flux + flux_regen)
+        player.stats["flux"] = new_flux
+        
+        # Send Flux regen notification
+        if flux_regen > 0 and new_flux < max_flux:
+            await self.manager.send_personal_message({
+                "type": "chat", 
+                "sender": "System", 
+                "content": GameMessages.FLUX_REGEN.format(regen=flux_regen, current=new_flux, max=max_flux), 
+                "channel": "channel-combat"
+            }, player.id)
+        
+        # Reduce skill cooldowns
+        await self._reduce_skill_cooldowns(player)
+        
+        flag_modified(player, "stats")
+        db.commit()
+
+    async def _process_loot(self, player: Player, loot_item_ids: List[str], db: Session) -> List[str]:
+        """Process loot items and add to inventory. Returns list of item names."""
+        if not loot_item_ids:
+            return []
+        
+        inv = list(player.inventory) if player.inventory else []
+        new_items = []
+        
+        for item_id in loot_item_ids:
+            item = inventory_manager.get_item(item_id)
+            if item:
+                found = False
+                for slot in inv:
+                    if slot["item_id"] == item_id:
+                        slot["qty"] += 1
+                        found = True
+                        break
+                if not found:
+                    inv.append({"item_id": item_id, "qty": 1})
+                new_items.append(item.name)
+        
+        if new_items:
+            player.inventory = inv
+            flag_modified(player, "inventory")
+        
+        return new_items
+
+    async def _update_quest_progress(self, player: Player, mob_id: str, db: Session) -> List[str]:
+        """Update quest progress for kill quests. Returns list of update messages."""
+        if not player.active_quests:
+            return []
+        
+        active = copy.deepcopy(player.active_quests)
+        logs = []
+        
+        for q_id, progress in active.items():
+            quest = quest_manager.get_quest(q_id)
+            if not quest:
+                continue
+            
+            if quest["type"] == "kill" and quest["target"] == mob_id:
+                if progress["progress"] < quest["count"]:
+                    progress["progress"] += 1
+                    logs.append(GameMessages.QUEST_UPDATE.format(
+                        title=quest["title"],
+                        progress=progress["progress"],
+                        count=quest["count"]
+                    ))
+        
+        if logs:
+            player.active_quests = active
+            flag_modified(player, "active_quests")
+        
+        return logs
+
+    async def _reduce_skill_cooldowns(self, player: Player) -> None:
+        """Reduce skill cooldowns by 1 and notify when skills are ready."""
+        if "skill_cooldowns" not in player.stats:
+            return
+        
+        cooldowns = player.stats["skill_cooldowns"]
+        for skill_id in list(cooldowns.keys()):
+            if cooldowns[skill_id] > 0:
+                cooldowns[skill_id] -= 1
+                if cooldowns[skill_id] <= 0:
+                    del cooldowns[skill_id]
+                    # Notify skill is ready
+                    skill = skills_manager.get_skill(skill_id)
+                    if skill:
+                        await self.manager.send_personal_message({
+                            "type": "chat",
+                            "sender": "System",
+                            "content": GameMessages.SKILL_READY.format(skill_name=skill.name),
+                            "channel": "channel-info"
+                        }, player.id)
+        
+        player.stats["skill_cooldowns"] = cooldowns
+
     async def cmd_flee(self, player: Player, db: Session):
-        if random.random() > 0.5:
+        if random.random() > (1 - FLEE_SUCCESS_CHANCE):
             player.combat_state = None
             if player.id in self.active_mobs: del self.active_mobs[player.id]
             db.commit()
@@ -437,7 +573,7 @@ class GameEngine:
             player.current_map = start_room.id
             db.commit()
             current_room = start_room
-            await self.msg_system(player.id, "You were lost in the void and returned to reality.")
+            await self.msg_system(player.id, GameMessages.LOST_IN_VOID)
 
         if direction in current_room.exits:
             player.current_map = current_room.exits[direction]
@@ -746,15 +882,15 @@ class GameEngine:
         })
         await self.msg_system(player.id, "ARCHON: 'YOU HAVE AWAKENED ME. STATE YOUR DESIRE.'")
         
-        # Reward: +5 Levels and full heal
+        # Reward: +WISH_LEVEL_BONUS Levels and full heal
         old_level = player.level
-        player.level += 5
+        player.level += WISH_LEVEL_BONUS
         player.exp = 0 
         
         # Scaling stats
         race = db.query(Race).filter(Race.name == player.race).first()
         if race and race.scaling_stats:
-            for _ in range(5): # Apply growth 5 times
+            for _ in range(WISH_LEVEL_BONUS):  # Apply growth WISH_LEVEL_BONUS times
                 for k, v in race.scaling_stats.items():
                     if k in player.stats:
                         player.stats[k] = int(player.stats[k] + v)
@@ -776,14 +912,14 @@ class GameEngine:
         flag_modified(player, "inventory")
         db.commit()
 
-        await self.msg_system(player.id, f"You have gained 5 levels! (Level {old_level} -> {player.level})")
+        await self.msg_system(player.id, f"You have gained {WISH_LEVEL_BONUS} levels! (Level {old_level} -> {player.level})")
         await self.msg_system(player.id, "ARCHON: 'IT IS DONE.' (The shards dissipate into the void).")
 
     async def grant_exp(self, player: Player, amount: int, db: Session):
         player.exp += amount
         
         while True:
-            req_exp = player.level * 100
+            req_exp = player.level * EXP_PER_LEVEL
             if player.exp >= req_exp:
                 player.level += 1
                 player.exp -= req_exp
@@ -803,9 +939,9 @@ class GameEngine:
                     if player.stats["hp"] > player.stats["max_hp"]:
                         player.stats["hp"] = player.stats["max_hp"]
                     
-                    # Recalculate Flux: base_flux + (INT * 5)
-                    base_flux = race.base_flux if race.base_flux else 100
-                    player.stats["max_flux"] = base_flux + (player.stats.get("int", 0) * 5)
+                    # Recalculate Flux: base_flux + (INT * FLUX_PER_INT)
+                    base_flux = race.base_flux if race.base_flux else BASE_FLUX
+                    player.stats["max_flux"] = base_flux + (player.stats.get("int", 0) * FLUX_PER_INT)
                     player.stats["flux"] = player.stats["max_flux"]  # Restore to full on level up
                     
                 # Auto-learn skills
@@ -1160,7 +1296,7 @@ class GameEngine:
         elif outcome["status"] == "loss":
             player.combat_state = None
             if player.id in self.active_mobs: del self.active_mobs[player.id]
-            player.stats["hp"] = int(player.stats["max_hp"] * 0.5)
+            player.stats["hp"] = int(player.stats["max_hp"] * REVIVE_HP_PERCENT)
             flag_modified(player, "stats")
             player.current_map = "start_area"
             player.transformation = "Base"
