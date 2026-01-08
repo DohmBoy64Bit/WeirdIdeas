@@ -68,8 +68,8 @@ function updateStats(p) {
     els.race.textContent = p.race;
     els.level.textContent = p.level;
     els.exp.textContent = p.exp;
-    // Calculate next level exp (simple formula for now)
-    const next = p.level * 1000;
+    // Calculate next level exp (must match EXP_PER_LEVEL on backend)
+    const next = p.level * 100;
     els.next.textContent = next;
     els.bar.style.width = Math.min(100, (p.exp / next) * 100) + '%';
 

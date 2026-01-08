@@ -14,6 +14,7 @@ from app.game.engine import GameEngine
 from app.core.database import SessionLocal 
 from app.models.player import Player
 from app.core.constants import MAX_COMMAND_LENGTH
+from app.core.messages import GameMessages
 import logging
 import json
 
@@ -107,13 +108,20 @@ async def websocket_endpoint(websocket: WebSocket, token: str = None):
                 
                 # Input validation
                 if len(data) > MAX_COMMAND_LENGTH:
-                    logger.warning(f"Command too long from player {player_id}: {len(data)} chars")
-                    await manager.send_personal_message({
-                        "type": "chat",
-                        "sender": "System",
-                        "content": f"Command too long. Maximum length is {MAX_COMMAND_LENGTH} characters.",
-                        "channel": "channel-system"
-                    }, player_id)
+                    logger.warning(
+                        f"Command too long from player {player_id}: {len(data)} chars"
+                    )
+                    await manager.send_personal_message(
+                        {
+                            "type": "chat",
+                            "sender": "System",
+                            "content": GameMessages.COMMAND_TOO_LONG.format(
+                                max_length=MAX_COMMAND_LENGTH
+                            ),
+                            "channel": "channel-system",
+                        },
+                        player_id,
+                    )
                     continue
                 
                 # Process command

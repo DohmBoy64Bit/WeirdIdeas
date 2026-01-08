@@ -466,11 +466,12 @@ class GameEngine:
     async def cmd_flee(self, player: Player, db: Session):
         if random.random() > (1 - FLEE_SUCCESS_CHANCE):
             player.combat_state = None
-            if player.id in self.active_mobs: del self.active_mobs[player.id]
+            if player.id in self.active_mobs:
+                del self.active_mobs[player.id]
             db.commit()
-            await self.msg_system(player.id, "You fled successfully!")
+            await self.msg_system(player.id, GameMessages.FLEE_SUCCESS)
         else:
-            await self.msg_system(player.id, "Failed to flee!")
+            await self.msg_system(player.id, GameMessages.FLEE_FAILED)
 
     async def refresh_ui(self, player: Player):
         """Internal method to refresh client UI state (stats, inventory, etc.)"""
@@ -1177,26 +1178,28 @@ class GameEngine:
     async def cmd_use_skill(self, player: Player, skill_name: str, db: Session):
         """Use a skill in combat."""
         if not player.combat_state:
-            await self.msg_system(player.id, "You can only use skills in combat!")
+            await self.msg_system(player.id, GameMessages.SKILLS_ONLY_IN_COMBAT)
             return
         
         if not skill_name:
-            await self.msg_system(player.id, "Usage: skill <skill_name>")
+            await self.msg_system(player.id, GameMessages.SKILL_USAGE)
             return
         
         # Find skill by name
         target_skill = skills_manager.get_skill_by_name(skill_name)
         
         if not target_skill:
-            await self.msg_system(player.id, f"Unknown skill '{skill_name}'.")
+            await self.msg_system(player.id, GameMessages.SKILL_UNKNOWN.format(skill_name=skill_name))
             return
             
         if target_skill.id not in player.learned_skills:
-             await self.msg_system(player.id, f"You haven't learned {target_skill.name} yet.")
-             return
+            await self.msg_system(player.id, GameMessages.SKILL_NOT_LEARNED.format(skill_name=target_skill.name))
+            return
         
         # Check if can use
-        can_use, error = skills_manager.can_use_skill(target_skill.id, player.race, player.level, player.transformation)
+        can_use, error = skills_manager.can_use_skill(
+            target_skill.id, player.race, player.level, player.transformation
+        )
         if not can_use:
             await self.msg_system(player.id, error)
             return
@@ -1205,14 +1208,24 @@ class GameEngine:
         skill_cooldowns = player.stats.get("skill_cooldowns", {})
         if target_skill.id in skill_cooldowns and skill_cooldowns[target_skill.id] > 0:
             remaining = skill_cooldowns[target_skill.id]
-            await self.msg_system(player.id, f"{target_skill.name} is on cooldown! {remaining} rounds remaining.")
+            await self.msg_system(
+                player.id,
+                GameMessages.SKILL_ON_COOLDOWN.format(
+                    skill_name=target_skill.name, remaining=remaining
+                ),
+            )
             return
         
         # Check Flux cost
         current_flux = player.stats.get("flux", 0)
         flux_cost = target_skill.flux_cost
         if current_flux < flux_cost:
-            await self.msg_system(player.id, f"Not enough Flux! Need {flux_cost}, have {current_flux}.")
+            await self.msg_system(
+                player.id,
+                GameMessages.SKILL_INSUFFICIENT_FLUX.format(
+                    required=flux_cost, current=current_flux
+                ),
+            )
             return
         
         # Deduct Flux and log it
@@ -1220,10 +1233,21 @@ class GameEngine:
         flag_modified(player, "stats")
         db.commit()
         
+        max_flux = player.stats.get("max_flux", BASE_FLUX)
         # Send Flux change notification
-        await self.manager.send_personal_message({
-            "type": "chat", "sender": "System", "content": f"⚡ Used {flux_cost} Flux ({current_flux - flux_cost}/{player.stats.get('max_flux', 100)} remaining)", "channel": "channel-combat"
-        }, player.id)
+        await self.manager.send_personal_message(
+            {
+                "type": "chat",
+                "sender": "System",
+                "content": GameMessages.FLUX_USED.format(
+                    cost=flux_cost,
+                    current=current_flux - flux_cost,
+                    max=max_flux,
+                ),
+                "channel": "channel-combat",
+            },
+            player.id,
+        )
         
         # Set cooldown if skill has one
         if target_skill.cooldown > 0:
@@ -1234,82 +1258,41 @@ class GameEngine:
             db.commit()
         
         # Execute skill in combat
-        mob = self.active_mobs.get(player.id)
-        if not mob and player.combat_state:
-             mob = self.combat_system.spawn_mob(player.combat_state["mob_id"])
-             mob.stats["hp"] = player.combat_state["hp"]
-             self.active_mobs[player.id] = mob
-
+        mob = self._get_or_recover_mob(player, db)
         if not mob:
-            player.combat_state = None
-            db.commit()
             return
 
         eff_stats = calculate_effective_stats(player.stats, player.transformation)
         
         class TempPlayer:
-            def __init__(self, stats): self.stats = stats
+            def __init__(self, stats):
+                self.stats = stats
         
         temp_player = TempPlayer(eff_stats)
 
-        outcome = await self.combat_system.combat_round(temp_player, mob, "skill", skill=target_skill)
+        outcome = await self.combat_system.combat_round(
+            temp_player, mob, "skill", skill=target_skill
+        )
         
         for line in outcome["log"]:
-             await self.manager.send_personal_message({
-                 "type": "chat", "sender": "Combat", "content": line, "channel": "channel-combat"
-            }, player.id)
+            await self.manager.send_personal_message(
+                {
+                    "type": "chat",
+                    "sender": "Combat",
+                    "content": line,
+                    "channel": "channel-combat",
+                },
+                player.id,
+            )
 
-        # Handle combat end
+        # Handle combat result using shared helpers
         if outcome["status"] == "win":
-            await self.grant_exp(player, outcome["exp"], db)
-            
-            logs = [f"You gained {outcome['exp']} EXP."]
-            
-            # LOOT HANDLING
-            if "loot" in outcome and outcome["loot"]:
-                inv = list(player.inventory) if player.inventory else []
-                new_items = []
-                for item_id in outcome["loot"]:
-                    item = inventory_manager.get_item(item_id)
-                    if item:
-                        found = False
-                        for slot in inv:
-                            if slot["item_id"] == item_id:
-                                slot["qty"] += 1
-                                found = True
-                                break
-                        if not found:
-                            inv.append({"item_id": item_id, "qty": 1})
-                        new_items.append(item.name)
-                
-                if new_items:
-                    player.inventory = inv
-                    flag_modified(player, "inventory")
-                    logs.append(f"Loot dropped: {', '.join(new_items)}")
-
-            await self.msg_system(player.id, " ".join(logs))
-            
-            player.combat_state = None
-            if player.id in self.active_mobs: del self.active_mobs[player.id]
-            db.commit()
-            
+            await self._handle_combat_win(player, outcome, db)
         elif outcome["status"] == "loss":
-            player.combat_state = None
-            if player.id in self.active_mobs: del self.active_mobs[player.id]
-            player.stats["hp"] = int(player.stats["max_hp"] * REVIVE_HP_PERCENT)
-            flag_modified(player, "stats")
-            player.current_map = "start_area"
-            player.transformation = "Base"
-            db.commit()
-            await self.msg_system(player.id, f"You took fatal damage! Reviving at start with {player.stats['hp']} HP.")
-            
+            await self._handle_combat_loss(player, db)
         elif outcome["status"] == "continue":
-            player.combat_state["hp"] = outcome["mob_hp"]
-            player.stats["hp"] = temp_player.stats["hp"] 
-            flag_modified(player, "combat_state")
-            flag_modified(player, "stats")
-            db.commit()
-            
+            await self._handle_combat_continue(player, outcome, temp_player, mob, db)
+        
         # Update UI
         await self.refresh_ui(player)
 
