@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root{
+  --bg: #0b0f1a; /* dark */
+  --panel: #0f1724; /* panel */
+  --accent: #00fff7; /* neon cyan */
+  --accent-2: #ff2dff; /* neon magenta */
+  --text: #e6f7ff;
+  --muted: #8da0b2;
+}
+
+html,body,#root{height:100%;}
+body{
+  margin:0;
+  background: linear-gradient(180deg, var(--bg) 0%, #071022 100%);
+  font-family: 'Press Start 2P', monospace;
+  color:var(--text);
+  -webkit-font-smoothing: none;
+  text-rendering: optimizeLegibility;
+}
+
+.pixel-container{
+  max-width:1000px;
+  margin:40px auto;
+  padding:20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 2px solid rgba(0,255,247,0.12);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.6);
+  image-rendering: pixelated;
+  transition: transform 160ms ease;
+}
+
+.neon-panel{
+  padding:16px;
+  border: 2px solid rgba(0,255,247,0.18);
+  background: rgba(0,0,0,0.25);
+}
+
+/* Neon glow and animated accents */
+.glow {
+  box-shadow: 0 0 10px rgba(0,255,247,0.18), 0 0 24px rgba(255,45,255,0.06) inset;
+}
+
+.join-code{
+  display:inline-block;
+  padding:8px 12px;
+  background:linear-gradient(90deg,var(--accent-2),var(--accent));
+  color:#000;
+  border-radius:6px;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:2px;
+  animation: pulse 1500ms infinite;
+}
+
+@keyframes pulse {
+  0% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(0,255,247,0.10); }
+  70% { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,255,247,0.04); }
+  100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(0,255,247,0.00); }
+}
+
+.copy-btn{
+  margin-left:8px;
+  padding:6px 8px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.06);
+  color:var(--text);
+  cursor:pointer;
+  transition: transform 120ms ease, background 120ms;
+}
+.copy-btn:hover{ transform: translateY(-2px); background: rgba(255,255,255,0.02); }
+
+.btn{
+  display:inline-block;
+  padding:10px 14px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  color:#001;
+  border-radius:6px;
+  cursor:pointer;
+  border: 2px solid rgba(0,0,0,0.2);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  font-weight:700;
+}
+.btn:hover{ transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,255,247,0.06); }
+
+/* inputs */
+input[type='text'], input[type='password'], input[type='number'], select {
+  width: 100%;
+  padding:8px 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: var(--text);
+  border-radius:4px;
+  outline: none;
+}
+input::placeholder{ color: rgba(255,255,255,0.35); }
+
+/* chat and messages */
+.chat{height:200px; background:rgba(0,0,0,0.2); overflow:auto; padding:8px; border-radius:4px;}
+.scoreboard{background:rgba(0,0,0,0.2); padding:8px}
+
+/* Game canvas effects */
+.canvas-wrap{ position: relative; }
+.scanlines{ position:absolute; left:0; right:0; top:0; bottom:0; pointer-events:none; background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px); background-size:100% 4px; mix-blend-mode: overlay; opacity:0.55; }
+
+/* scoreboard rows */
+.score-row{ display:flex; justify-content:space-between; padding:6px 8px; border-bottom:1px dashed rgba(255,255,255,0.03); }
+
+/* small badges */
+.badge{ padding:4px 6px; border-radius:4px; background: rgba(255,255,255,0.04); color:var(--text); font-size:10px; }
+
+/* subtle hover for player row */
+.player-row{ opacity:0; transform: translateY(-6px); animation: slideIn 360ms forwards ease; }
+.player-row:hover{ background: rgba(255,255,255,0.02); }
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* transition for pixelation changes (fake ease by fading overlay) */
+.pixel-fade{ transition: opacity 280ms ease; }
+
+/* chat messages */
+.chat-message{ padding:6px 8px; border-radius:4px; margin-bottom:6px; }
+.chat-message .meta{ font-size:10px; color:var(--muted); margin-bottom:4px; }
+.chat-message .text{ font-size:12px; }
+.chat-message.me{ background: linear-gradient(90deg, rgba(0,255,247,0.08), rgba(255,45,255,0.02)); }
+.chat-message.other{ background: rgba(255,255,255,0.02); }
+
+
+.join-code{
+  display:inline-block;
+  padding:8px 12px;
+  background:linear-gradient(90deg,var(--accent-2),var(--accent));
+  color:#000;
+  border-radius:4px;
+  font-size:12px;
+}
+
+.copy-btn{
+  margin-left:8px;
+  padding:6px 8px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.06);
+  color:var(--text);
+  cursor:pointer;
+}
+
+.btn{
+  display:inline-block;
+  padding:10px 14px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  color:#001;
+  border-radius:6px;
+  cursor:pointer;
+  border: 2px solid rgba(0,0,0,0.2);
+}
+
+.small-muted{color:var(--muted); font-size:11px;}
+
+/* pixel text sizes */
+.h1{font-size:18px}
+.h2{font-size:12px}
+.px-small{font-size:10px}
+
+/* basic layout */
+.grid{display:grid; grid-template-columns: 1fr 320px; gap:16px}
+.panel{background:var(--panel); padding:12px; border-radius:6px}
+
+/* chat and scoreboard placeholder */
+.chat{height:200px; background:rgba(0,0,0,0.2); overflow:auto; padding:8px}
+.scoreboard{background:rgba(0,0,0,0.2); padding:8px}
+
+/* make images pixelated when scaled */
+.pixel-image{image-rendering: pixelated; image-rendering: crisp-edges;}
