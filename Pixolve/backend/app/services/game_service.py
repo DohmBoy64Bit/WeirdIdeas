@@ -121,10 +121,56 @@ def start_game_for_lobby(lobby_id: str) -> GameState:
     if not lobby:
         raise ValueError("lobby_not_found")
 
+    # Get category and images
+    from ..services import category_service
+    import os
+    import random
+    
+    category_id = lobby.category
+    category = category_service.get_category(category_id) if category_id else None
+    image_paths = []
+    
+    if category and category.get('images'):
+        image_paths = category['images']
+    else:
+        # Fallback: use placeholder
+        image_paths = ['placeholder.png']
+    
+    # Select random images for rounds (with replacement if needed)
+    selected_images = []
+    for r in range(lobby.rounds):
+        if image_paths:
+            selected_images.append(random.choice(image_paths))
+        else:
+            selected_images.append('placeholder.png')
+    
+    # Helper to extract answer from image filename
+    def get_answer_from_image_path(img_path: str) -> str:
+        """Extract answer from image path (filename without extension)."""
+        filename = os.path.basename(img_path)
+        # Remove extension
+        name = os.path.splitext(filename)[0]
+        # Remove UUID prefix if present (format: uuid_filename.ext)
+        if '_' in name:
+            parts = name.split('_', 1)
+            if len(parts) > 1 and len(parts[0]) == 36:  # UUID length
+                name = parts[1]
+        return name.strip()
+
     game_id = str(uuid.uuid4())
     rounds: List[RoundState] = []
     for r in range(lobby.rounds):
-        rs = RoundState(round_index=r, image_id=f"image_{r}", reveal_steps=_make_reveal_steps(DEFAULT_ROUND_DURATION), duration_secs=DEFAULT_ROUND_DURATION, correct_answer=f"image_{r}")
+        img_path = selected_images[r]
+        answer = get_answer_from_image_path(img_path)
+        # Store relative path for serving
+        image_url = f"/data/{img_path}" if img_path != 'placeholder.png' else "/placeholder.png"
+        rs = RoundState(
+            round_index=r,
+            image_id=image_url,
+            reveal_steps=_make_reveal_steps(DEFAULT_ROUND_DURATION),
+            duration_secs=DEFAULT_ROUND_DURATION,
+            correct_answer=answer
+        )
         rounds.append(rs)
 
     gs = GameState(id=game_id, lobby_id=lobby_id, round_index=0, rounds=rounds, players=[p.id for p in lobby.players], finished=False)
@@ -138,7 +184,16 @@ def start_game_for_lobby(lobby_id: str) -> GameState:
             await _run_round_and_broadcast(game_id, lobby_id, rs)
         # mark finished
         gs.finished = True
-        await manager.broadcast(lobby_id, {"type": "game_finished", "data": {"game_id": game_id}})
+        # Get final scores from runtime
+        runtime = RUNTIME.get(game_id, {})
+        final_scores = runtime.get("scores", {})
+        await manager.broadcast(lobby_id, {
+            "type": "game_finished", 
+            "data": {
+                "game_id": game_id,
+                "scores": final_scores
+            }
+        })
 
     # Schedule the run_game coroutine — if there's an active loop, create a task, otherwise run in a background thread
     try:

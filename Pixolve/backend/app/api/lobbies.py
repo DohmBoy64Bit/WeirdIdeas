@@ -14,10 +14,13 @@ _LOBBIES: Dict[str, LobbyOut] = {}
 def create_lobby(spec: LobbyCreate):
     """Create a lobby; host_id should be provided (returned value includes a join_code)."""
     import uuid
+    from ..schemas.lobby import PlayerInLobby
     lobby_id = str(uuid.uuid4())
     join_code = "".join(secrets.choice("ABCDEFGHJKMNPQRSTUVWXYZ23456789") for _ in range(6))
     host = spec.host_id or "host-unknown"
-    lobby = LobbyOut(id=lobby_id, host_id=host, max_players=spec.max_players, players=[], category=spec.category, rounds=spec.rounds, join_code=join_code)
+    # Automatically add host as first player
+    host_player = PlayerInLobby(id=host, username=host, display_name=host, ready=False)
+    lobby = LobbyOut(id=lobby_id, host_id=host, max_players=spec.max_players, players=[host_player], category=spec.category, rounds=spec.rounds, join_code=join_code)
     _LOBBIES[lobby_id] = lobby
     return lobby
 
@@ -58,4 +61,5 @@ def leave_lobby(lobby_id: str, player: PlayerInLobby):
         raise HTTPException(status_code=404, detail="Lobby not found")
     lobby = _LOBBIES[lobby_id]
     lobby.players = [p for p in lobby.players if p.id != player.id]
+    # Note: WebSocket clients will get lobby_update message if connected
     return {"lobby": lobby}

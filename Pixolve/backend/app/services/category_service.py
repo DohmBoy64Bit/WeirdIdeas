@@ -34,6 +34,13 @@ def save_categories():
 
 
 def create_category(name: str, description: Optional[str] = None, difficulty: int = 1, active: bool = True) -> dict:
+    """Create a new category. Raises ValueError if a category with the same name already exists."""
+    # Check for duplicate names (case-insensitive)
+    name_lower = name.lower().strip()
+    for existing_cat in CATEGORIES.values():
+        if existing_cat.get('name', '').lower().strip() == name_lower:
+            raise ValueError(f"Category with name '{name}' already exists")
+    
     cid = str(uuid.uuid4())
     cat = {"id": cid, "name": name, "description": description, "difficulty": difficulty, "images": [], "active": active}
     CATEGORIES[cid] = cat
@@ -42,7 +49,14 @@ def create_category(name: str, description: Optional[str] = None, difficulty: in
 
 
 def list_categories() -> List[dict]:
-    return list(CATEGORIES.values())
+    """List all categories, deduplicating by name (keeping the first occurrence of each unique name)."""
+    seen_names = set()
+    unique_categories = []
+    for cat in CATEGORIES.values():
+        if cat.get('name') not in seen_names:
+            seen_names.add(cat.get('name'))
+            unique_categories.append(cat)
+    return unique_categories
 
 
 def get_category(cid: str) -> Optional[dict]:

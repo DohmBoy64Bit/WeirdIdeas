@@ -1,4 +1,4 @@
-// frontend/App.js
+// frontend/App.jsx
 import React, {useState, useEffect} from 'react';
 import './styles.css';
 import Login from './components/Login';
@@ -10,19 +10,26 @@ function App() {
 
   useEffect(()=>{
     if (token){
-      // Fetch profile
+      // Fetch profile to validate token
       fetch('/auth/me', {headers: {"Authorization": `Bearer ${token}`}}).then(async res=>{
         if (res.ok){
           const p = await res.json();
           setUser(p);
         } else {
-          // fallback
-          const uname = localStorage.getItem('pixolve_username') || 'player';
-          setUser({username: uname});
+          // Token is invalid - clear it and force re-login
+          console.log('Token validation failed, clearing token');
+          localStorage.removeItem('pixolve_token');
+          localStorage.removeItem('pixolve_username');
+          setToken(null);
+          setUser(null);
         }
-      }).catch(()=>{
-        const uname = localStorage.getItem('pixolve_username') || 'player';
-        setUser({username: uname});
+      }).catch((err)=>{
+        console.error('Error validating token:', err);
+        // Network error - clear token to be safe
+        localStorage.removeItem('pixolve_token');
+        localStorage.removeItem('pixolve_username');
+        setToken(null);
+        setUser(null);
       })
     }
   },[token])

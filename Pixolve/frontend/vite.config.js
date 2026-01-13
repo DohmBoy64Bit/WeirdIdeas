@@ -11,6 +11,7 @@ export default defineConfig({
       '/lobbies': { target: 'http://localhost:8000', changeOrigin: true },
       '/auth': { target: 'http://localhost:8000', changeOrigin: true },
       '/categories': { target: 'http://localhost:8000', changeOrigin: true },
+      '/data': { target: 'http://localhost:8000', changeOrigin: true },
       '/ws': { target: 'ws://localhost:8000', ws: true }
     }
   }

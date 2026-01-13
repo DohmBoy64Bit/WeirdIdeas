@@ -72,16 +72,40 @@ async def websocket_endpoint(websocket: WebSocket):
                 except Exception as e:
                     await websocket.send_json({"type": "error", "data": str(e)})
             elif typ == "join_lobby":
-                # simple broadcast for now
+                # Add player to lobby if not already present
+                player_data = data.get("data", {}).get("player", {})
+                if player_data:
+                    pid = player_data.get("id") or player_data.get("username")
+                    username = player_data.get("username") or pid
+                    # Check if player already in lobby
+                    player_exists = any(p.id == pid or p.username == pid for p in _LOBBIES[lobby_id].players)
+                    if not player_exists:
+                        from ..schemas.lobby import PlayerInLobby
+                        new_player = PlayerInLobby(
+                            id=pid,
+                            username=username,
+                            display_name=player_data.get("display_name") or username,
+                            ready=False
+                        )
+                        if len(_LOBBIES[lobby_id].players) < _LOBBIES[lobby_id].max_players:
+                            _LOBBIES[lobby_id].players.append(new_player)
+                            logger.debug("Added player %s to lobby %s", pid, lobby_id)
                 await manager.broadcast(lobby_id, {"type": "lobby_update", "data": {"players": [p.model_dump() for p in _LOBBIES[lobby_id].players]}})
             elif typ == "player_ready":
                 payload = data.get("data", {})
                 pid = payload.get("player_id")
                 ready = payload.get("ready", False)
+                logger.debug("player_ready: lobby=%s player=%s ready=%s", lobby_id, pid, ready)
                 # update lobby player ready state
+                player_found = False
                 for p in _LOBBIES[lobby_id].players:
-                    if p.id == pid:
+                    if p.id == pid or p.username == pid:
                         p.ready = ready
+                        player_found = True
+                        logger.debug("Updated player ready state: %s -> %s", pid, ready)
+                        break
+                if not player_found:
+                    logger.warning("player_ready: player %s not found in lobby %s players: %s", pid, lobby_id, [p.id for p in _LOBBIES[lobby_id].players])
                 await manager.broadcast(lobby_id, {"type": "lobby_update", "data": {"players": [p.model_dump() for p in _LOBBIES[lobby_id].players]}})
             elif typ == "chat":
                 msg = data.get("data") or {}
