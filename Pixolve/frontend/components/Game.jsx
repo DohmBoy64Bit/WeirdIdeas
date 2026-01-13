@@ -11,6 +11,8 @@ export default function Game({ws, lobbyId, token, user}){
   const [currentRound, setCurrentRound] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [finalScores, setFinalScores] = useState({});
+  const [timeRemaining, setTimeRemaining] = useState(20);
+  const [roundStarted, setRoundStarted] = useState(false);
 
   useEffect(()=>{
     // listen to ws messages from parent (they will call handleMsg)
@@ -22,14 +24,33 @@ export default function Game({ws, lobbyId, token, user}){
           // Load new image for the round
           setCurrentRound(msg.data.round_index);
           const imageUrl = msg.data.image_id || '/placeholder.png';
-          setCurrentImage(imageUrl);
+          // Use image processor endpoint for pixelated image
+          // Extract image path from URL (e.g., /data/images/abc123_photo.jpg -> images/abc123_photo.jpg)
+          let processedUrl = imageUrl;
+          if (imageUrl.startsWith('/data/')) {
+            const imagePath = imageUrl.replace('/data/', '');
+            processedUrl = `/categories/images/pixelated?image_path=${encodeURIComponent(imagePath)}&pixel_size=32&num_colors=16`;
+          }
+          setCurrentImage(processedUrl);
           setPixelation(32); // Reset pixelation
+          setTimeRemaining(20); // Reset timer
+          setRoundStarted(true);
           setMessages(m => [...m, `Round ${msg.data.round_index + 1} started`]);
         } else if (msg.type === 'reveal_step'){
-          // smooth transition: fade out overlay briefly
-          const prev = pixelation;
-          setPixelation(msg.data.pixelation);
-          // optional: flash border on reveal
+          // Update pixelation level - use image processor endpoint
+          const pixelSize = msg.data.pixelation;
+          setPixelation(pixelSize);
+          // Update image URL with new pixel_size
+          const imageUrl = currentImage;
+          if (imageUrl && imageUrl.includes('/pixelated')) {
+            // Extract image_path from current URL and update pixel_size
+            const url = new URL(imageUrl, window.location.origin);
+            const imagePath = url.searchParams.get('image_path');
+            if (imagePath) {
+              const newUrl = `/categories/images/pixelated?image_path=${encodeURIComponent(imagePath)}&pixel_size=${pixelSize}&num_colors=16&t=${Date.now()}`;
+              setCurrentImage(newUrl);
+            }
+          }
         } else if (msg.type === 'guess_result'){
           const result = msg.data;
           if (result.correct) {
@@ -43,6 +64,8 @@ export default function Game({ws, lobbyId, token, user}){
         } else if (msg.type === 'scoreboard_update'){
           setScores(msg.data.scores || {})
         } else if (msg.type === 'end_round'){
+          setRoundStarted(false);
+          setTimeRemaining(0);
           setMessages(m => [...m, `Round ${msg.data.round_index + 1} ended`])
         } else if (msg.type === 'game_finished'){
           setGameFinished(true);
@@ -59,8 +82,25 @@ export default function Game({ws, lobbyId, token, user}){
     return ()=>{ try{ ws.removeEventListener('message', handler); }catch(e){} };
   },[ws, scores]);
 
+  // Timer countdown
+  useEffect(() => {
+    if (!roundStarted || timeRemaining <= 0) return;
+    
+    const interval = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          setRoundStarted(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [roundStarted, timeRemaining]);
+
   useEffect(()=>{
-    // draw image with pixelation
+    // Using image processor for pixelation - just display the processed image
     const img = imgRef.current;
     const canvas = canvasRef.current;
     if (!img || !canvas) return;
@@ -73,6 +113,24 @@ export default function Game({ws, lobbyId, token, user}){
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
+    function draw(){
+      if (!img.complete || !img.naturalWidth) return;
+      
+      const w = canvas.width = img.naturalWidth || 800;
+      const h = canvas.height = img.naturalHeight || 600;
+      
+      // Image processor handles pixelation server-side, just draw the image
+      ctx.clearRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+    }
+    
+    if (img.complete) {
+      draw();
+    } else {
+      img.onload = draw;
+    }
+    
+    /* OLD CLIENT-SIDE PIXELATION CODE (commented out - using image processor now)
     function draw(){
       if (!img.complete || !img.naturalWidth) return;
       
@@ -96,12 +154,7 @@ export default function Game({ws, lobbyId, token, user}){
         ctx.drawImage(off, 0, 0, sx, sy, 0, 0, w, h);
       }
     }
-    
-    if (img.complete) {
-      draw();
-    } else {
-      img.onload = draw;
-    }
+    */
   },[pixelation, currentImage]);
 
   function handleSubmitGuess(){
@@ -153,7 +206,21 @@ export default function Game({ws, lobbyId, token, user}){
   return (
     <div className="pixel-container grid">
       <div className="panel neon-panel">
-        <h2 className="h2">Round {currentRound + 1}</h2>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+          <h2 className="h2">Round {currentRound + 1}</h2>
+          {roundStarted && (
+            <div className="px-small" style={{
+              padding: '8px 12px',
+              background: timeRemaining <= 5 ? 'rgba(255,68,68,0.3)' : 'rgba(0,255,247,0.2)',
+              border: '2px solid',
+              borderColor: timeRemaining <= 5 ? 'var(--retro-red)' : 'var(--accent)',
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: '12px'
+            }}>
+              {timeRemaining}s
+            </div>
+          )}
+        </div>
         <canvas style={{width:'100%', height:240, background:'#000', imageRendering:'pixelated'}} ref={canvasRef}></canvas>
         {/* hidden image source */}
         <img ref={imgRef} src={currentImage} alt="game image" style={{display:'none'}} crossOrigin="anonymous" />

@@ -39,25 +39,21 @@ export default function Login({onLogin}){
   }
 
   return (
-    <div className="pixel-container neon-panel" style={{maxWidth:520}}>
-      <h1 className="h1">Pixolve</h1>
-      <p className="small-muted">Retro pixel guessing game</p>
-      <div style={{marginTop:12}}>
-        <label className="px-small">Username</label>
+    <div className="pixel-container neon-panel" style={{maxWidth:520, margin: '0 auto', padding: '32px'}}>
+      <h1 className="h1" style={{textAlign: 'center', marginBottom: '16px'}}>Pixolve</h1>
+      <p className="small-muted" style={{textAlign: 'center', marginBottom: '32px'}}>Retro pixel guessing game</p>
+      <div style={{marginTop:20}}>
+        <label className="px-small" style={{display:'block', marginBottom:8}}>Username</label>
         <div><input autoFocus value={username} onChange={e=>setUsername(e.target.value)} placeholder="Choose a username" /></div>
       </div>
-      <div style={{marginTop:8}}>
-        <label className="px-small">Password</label>
+      <div style={{marginTop:16}}>
+        <label className="px-small" style={{display:'block', marginBottom:8}}>Password</label>
         <div><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Secret" /></div>
       </div>
-      {error && <div style={{color:'#ff8080', marginTop:8}}>{error}</div>}
-      <div style={{marginTop:12, display:'flex', gap:8}}>
-        <button className="btn" onClick={handleLogin} disabled={loading}>{loading? '...' : 'Login'}</button>
-        <button className="btn" onClick={handleRegister} disabled={loading}>Register</button>
-      </div>
-      <div style={{marginTop:12, display:'flex', justifyContent:'space-between'}}>
-        <div className="small-muted">Neon pixel theme</div>
-        <div className="small-muted">Token: 7 days</div>
+      {error && <div style={{color:'#ff8080', marginTop:12, fontSize:'10px'}}>{error}</div>}
+      <div style={{marginTop:20, display:'flex', gap:12}}>
+        <button className="btn btn-login" onClick={handleLogin} disabled={loading}>{loading? '...' : 'Login'}</button>
+        <button className="btn btn-register" onClick={handleRegister} disabled={loading}>Register</button>
       </div>
     </div>
   )

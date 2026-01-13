@@ -201,68 +201,69 @@ export default function Lobby({user, token}){
   }
 
   return (
-    <div className="pixel-container grid">
+    <div className="pixel-container" style={{maxWidth: '1200px', width: '100%', margin: '0 auto'}}>
+      <div className="grid">
       <div className="panel neon-panel">
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: '16px'}}>
           <h2 className="h2">Lobby</h2>
           {user && (
             <div style={{textAlign:'right'}}>
-              <div className="px-small">{user.display_name || user.username}</div>
-              <div className="small-muted">Level {user.level || 1} • XP {user.xp || 0}</div>
+              <div className="px-small" style={{lineHeight: '1.6'}}>
+                {user.display_name || user.username} • Level {user.level || 1} • XP {user.xp || 0}
+              </div>
             </div>
           )}
         </div>
         {!lobby && (
           <div>
-            <div style={{marginTop:8}}>
-              <label className="px-small">Category</label>
+            <div style={{marginTop:16}}>
+              <label className="px-small" style={{display:'block', marginBottom:8}}>Category</label>
               <div>
-                <select value={selectedCategory || ''} onChange={e=>setSelectedCategory(e.target.value)}>
+                <select value={selectedCategory || ''} onChange={e=>setSelectedCategory(e.target.value)} style={{width: '100%'}}>
                   {categories.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              {selectedCategory && <div className="small-muted" style={{marginTop:6}}>{(categories.find(c=>c.id===selectedCategory)||{}).description}</div>}
             </div>
 
-            <div style={{marginTop:8}}>
-              <label className="px-small">Rounds</label>
-              <div><input type="number" value={rounds} onChange={e=>setRounds(Number(e.target.value))} min={1} max={20} /></div>
+            <div style={{marginTop:24}}>
+              <label className="px-small" style={{display:'block', marginBottom:8}}>Rounds</label>
+              <div><input type="number" value={rounds} onChange={e=>setRounds(Number(e.target.value))} min={1} max={20} style={{width: '100%', boxSizing: 'border-box'}} /></div>
             </div>
 
-            <div style={{marginTop:8}}>
-              <label className="px-small">Max players</label>
-              <div><input type="number" value={maxPlayers} onChange={e=>setMaxPlayers(Number(e.target.value))} min={2} max={20} /></div>
+            <div style={{marginTop:24}}>
+              <label className="px-small" style={{display:'block', marginBottom:8}}>Max players</label>
+              <div><input type="number" value={maxPlayers} onChange={e=>setMaxPlayers(Number(e.target.value))} min={2} max={20} style={{width: '100%', boxSizing: 'border-box'}} /></div>
             </div>
 
-            <div style={{marginTop:12}}>
-              <button className="btn" onClick={createLobby}>Create Lobby</button>
-              <button className="btn" onClick={joinByCode} style={{marginLeft:8}}>Join by Code</button>
+            <div style={{marginTop:20, display:'flex', gap:12}}>
+              <button className="btn btn-create" onClick={createLobby}>Create Lobby</button>
+              <button className="btn btn-join" onClick={joinByCode}>Join by Code</button>
             </div>
           </div>
         )}
 
         {lobby && (
-          <div style={{marginTop:12}}>
-            <div><span className="small-muted">Join code</span></div>
-            <div style={{marginTop:6}}>
+          <div style={{marginTop:16}}>
+            <div style={{marginBottom:8}}><span className="small-muted">Join code</span></div>
+            <div style={{marginTop:8, display:'flex', alignItems:'center', gap:8}}>
               <span className="join-code">{joinCode}</span>
               <button className="copy-btn" onClick={copyCode}>Copy</button>
             </div>
 
-            <div style={{marginTop:12}}>
-              <div className="small-muted">Category</div>
-              <div style={{marginTop:6}}>{(categories.find(c=>c.id===lobby.category)||{}).name || lobby.category || '—'}</div>
+            <div style={{marginTop:40}}>
+              <div className="small-muted" style={{marginBottom:8}}>Category</div>
+              <div>{(categories.find(c=>c.id===lobby.category)||{}).name || lobby.category || '—'}</div>
             </div>
 
-            <div style={{marginTop:12}}>
-              <div className="small-muted">Players</div>
-              <ul>
-                {players.map(p=> <li key={p.id} className="player-row" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}><span>{p.username}{p.id===lobby.host_id && <strong style={{marginLeft:8}} className="badge">Host</strong>}</span><span className="small-muted">{p.ready? 'Ready' : ''}</span></li>)}
+            <div style={{marginTop:40}}>
+              <div className="small-muted" style={{marginBottom:8}}>Players</div>
+              <ul style={{listStyle:'none', padding:0, margin:0}}>
+                {players.map(p=> <li key={p.id} className="player-row" style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px dashed rgba(255,255,255,0.1)'}}><span>{p.username}{p.id===lobby.host_id && <strong style={{marginLeft:8}} className="badge">Host</strong>}</span><span className="small-muted">{p.ready? 'Ready' : ''}</span></li>)}
               </ul>
             </div>
-            <div style={{marginTop:12}}>
+            <div style={{marginTop:20, display:'flex', gap:12, flexWrap:'wrap'}}>
               <button 
-                className="btn" 
+                className="btn btn-ready" 
                 disabled={!wsConnected}
                 onClick={(e)=>{
                   e.preventDefault();
@@ -287,8 +288,7 @@ export default function Lobby({user, token}){
               </button>
               {lobby && (lobby.host_id === user.username) && (
                 <button 
-                  className="btn" 
-                  style={{marginLeft:8}} 
+                  className="btn btn-start" 
                   onClick={(e)=>{
                     e.preventDefault();
                     if (!wsConnected || !wsRef.current) {
@@ -314,8 +314,7 @@ export default function Lobby({user, token}){
                 </button>
               )}
               <button 
-                className="btn" 
-                style={{marginLeft:8}} 
+                className="btn btn-leave" 
                 onClick={async (e)=>{
                   e.preventDefault();
                   if (!lobby) {
@@ -377,8 +376,8 @@ export default function Lobby({user, token}){
       </div>
 
       <div>
-        <div className="panel neon-panel">
-          <h2 className="h2">Chat</h2>
+        <div className="panel neon-panel" style={{marginBottom: '16px'}}>
+          <h2 className="h2" style={{marginBottom: '12px'}}>Chat</h2>
           <div className="chat" id="chat-window">
             {chatMessages.length===0 && (
               <div className="small-muted">
@@ -394,11 +393,25 @@ export default function Lobby({user, token}){
               </div>
             ))}
           </div>
-          <div style={{display:'flex', marginTop:8}}>
+          <div style={{display:'flex', marginTop:12, gap:8, alignItems:'stretch'}}>
             <input 
               id="chat-input" 
               placeholder={!lobby || !wsConnected ? "Join a lobby to chat..." : "Say something..."} 
               disabled={!lobby || !wsConnected}
+              style={{
+                flex: 1,
+                maxWidth: '200px',
+                padding: '10px 12px',
+                background: 'rgba(0,0,0,0.4)',
+                border: '2px solid rgba(0,255,247,0.2)',
+                borderStyle: 'inset',
+                color: 'var(--text)',
+                fontFamily: "'Press Start 2P', monospace",
+                fontSize: '10px',
+                imageRendering: 'pixelated',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)',
+                boxSizing: 'border-box'
+              }}
               onKeyDown={(e)=>{ 
                 if (e.key==='Enter' && !e.target.disabled){ 
                   e.preventDefault();
@@ -409,7 +422,7 @@ export default function Lobby({user, token}){
             />
             <button 
               id="chat-send" 
-              className="btn" 
+              className="btn btn-send" 
               disabled={!lobby || !wsConnected}
               onClick={(e)=>{
                 e.preventDefault();
@@ -434,15 +447,14 @@ export default function Lobby({user, token}){
                   alert('Failed to send message: ' + err.message);
                 }
               }} 
-              style={{marginLeft:8}}
             >
               Send
             </button>
           </div>
         </div>
 
-        <div className="panel neon-panel" style={{marginTop:12}}>
-          <h2 className="h2">Scoreboard</h2>
+        <div className="panel neon-panel">
+          <h2 className="h2" style={{marginBottom: '12px'}}>Scoreboard</h2>
           <div className="scoreboard">
             {Object.keys(scores).length===0 && <div className="small-muted">No scores yet</div>}
             {Object.entries(scores)
@@ -460,6 +472,7 @@ export default function Lobby({user, token}){
               ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

@@ -63,6 +63,40 @@ def get_category(cid: str) -> Optional[dict]:
     return CATEGORIES.get(cid)
 
 
+def delete_category(cid: str) -> bool:
+    """Delete a category by ID. Returns True if deleted, False if not found."""
+    if cid in CATEGORIES:
+        del CATEGORIES[cid]
+        save_categories()
+        return True
+    return False
+
+
+def update_category(cid: str, name: Optional[str] = None, description: Optional[str] = None, 
+                   difficulty: Optional[int] = None, active: Optional[bool] = None) -> Optional[dict]:
+    """Update a category. Returns the updated category or None if not found."""
+    if cid not in CATEGORIES:
+        return None
+    
+    cat = CATEGORIES[cid]
+    if name is not None:
+        # Check for duplicate names (case-insensitive) excluding current category
+        name_lower = name.lower().strip()
+        for existing_id, existing_cat in CATEGORIES.items():
+            if existing_id != cid and existing_cat.get('name', '').lower().strip() == name_lower:
+                raise ValueError(f"Category with name '{name}' already exists")
+        cat['name'] = name
+    if description is not None:
+        cat['description'] = description
+    if difficulty is not None:
+        cat['difficulty'] = difficulty
+    if active is not None:
+        cat['active'] = active
+    
+    save_categories()
+    return cat
+
+
 def import_images_from_dir(category_id: str, images_dir: str) -> int:
     """Scan `images_dir` for image files (png/jpg) and add to category's images list.
     Returns the number of images added.
@@ -86,6 +120,34 @@ def import_images_from_dir(category_id: str, images_dir: str) -> int:
         added += 1
     save_categories()
     return added
+
+
+def remove_image_from_category(category_id: str, image_path: str) -> bool:
+    """Remove an image from a category's images list and optionally delete the file.
+    Returns True if removed, False if not found.
+    
+    Args:
+        category_id: Category ID
+        image_path: Relative path to image (e.g., 'images/abc123_photo.jpg')
+    """
+    if category_id not in CATEGORIES:
+        return False
+    
+    category = CATEGORIES[category_id]
+    if image_path in category.get('images', []):
+        category['images'].remove(image_path)
+        save_categories()
+        
+        # Optionally delete the file from disk
+        full_path = os.path.join(DATA_DIR, image_path)
+        if os.path.exists(full_path):
+            try:
+                os.remove(full_path)
+            except Exception as e:
+                print(f"Warning: Could not delete image file {full_path}: {e}")
+        
+        return True
+    return False
 
 
 # load categories at import time if present

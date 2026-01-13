@@ -7,6 +7,11 @@
   --accent-2: #ff2dff; /* neon magenta */
   --text: #e6f7ff;
   --muted: #8da0b2;
+  /* Retro button colors */
+  --retro-green: #00ff41; /* Classic arcade green */
+  --retro-yellow: #ffd700; /* Classic arcade yellow */
+  --retro-blue: #00aaff; /* Classic arcade blue */
+  --retro-red: #ff4444; /* Classic arcade red */
 }
 
 html,body,#root{height:100%;}
@@ -17,17 +22,22 @@ body{
   color:var(--text);
   -webkit-font-smoothing: none;
   text-rendering: optimizeLegibility;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .pixel-container{
   max-width:1000px;
-  margin:40px auto;
+  width: 100%;
+  margin: 0 auto;
   padding:20px;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 2px solid rgba(0,255,247,0.12);
   box-shadow: 0 6px 0 rgba(0,0,0,0.6);
   image-rendering: pixelated;
-  transition: transform 160ms ease;
+  /* No transitions - pixel perfect */
 }
 
 .neon-panel{
@@ -41,59 +51,140 @@ body{
   box-shadow: 0 0 10px rgba(0,255,247,0.18), 0 0 24px rgba(255,45,255,0.06) inset;
 }
 
-.join-code{
-  display:inline-block;
-  padding:8px 12px;
-  background:linear-gradient(90deg,var(--accent-2),var(--accent));
-  color:#000;
-  border-radius:6px;
-  font-size:13px;
-  font-weight:700;
-  letter-spacing:2px;
-  animation: pulse 1500ms infinite;
-}
-
-@keyframes pulse {
-  0% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(0,255,247,0.10); }
-  70% { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,255,247,0.04); }
-  100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(0,255,247,0.00); }
-}
+/* Removed pulse animation - keeping pixel-perfect style */
 
 .copy-btn{
   margin-left:8px;
   padding:6px 8px;
-  background:transparent;
-  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(0,0,0,0.3);
+  border: 2px solid rgba(0,255,247,0.3);
+  border-style: outset;
   color:var(--text);
   cursor:pointer;
-  transition: transform 120ms ease, background 120ms;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  image-rendering: pixelated;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.6);
+  /* No transitions - pixel perfect */
 }
-.copy-btn:hover{ transform: translateY(-2px); background: rgba(255,255,255,0.02); }
+.copy-btn:hover{ 
+  background:rgba(0,255,247,0.1);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  transform: translateY(1px);
+}
+.copy-btn:active{
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+  transform: translateY(2px);
+}
 
 .btn{
   display:inline-block;
-  padding:10px 14px;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  color:#001;
-  border-radius:6px;
+  padding:12px 20px;
+  color:#000;
+  border: none;
   cursor:pointer;
-  border: 2px solid rgba(0,0,0,0.2);
-  transition: transform 120ms ease, box-shadow 120ms ease;
   font-weight:700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  image-rendering: pixelated;
+  box-shadow: 
+    0 0 0 2px #000,
+    0 0 0 4px currentColor,
+    0 4px 0 #000,
+    0 4px 0 #000;
+  text-shadow: none;
+  position: relative;
+  /* No transitions - pixel perfect */
 }
-.btn:hover{ transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,255,247,0.06); }
+.btn-login{
+  background: var(--retro-green); /* Classic arcade green - "GO" */
+  color: #000;
+}
+.btn-register{
+  background: var(--retro-yellow); /* Classic arcade yellow - "NEW" */
+  color: #000;
+}
+/* Lobby buttons with retro colors */
+.btn-create{
+  background: var(--retro-blue); /* Classic arcade blue */
+  color: #000;
+}
+.btn-join{
+  background: var(--retro-yellow); /* Classic arcade yellow */
+  color: #000;
+}
+.btn-send{
+  background: var(--retro-green); /* Classic arcade green - "SEND" */
+  color: #000;
+}
+.btn-ready{
+  background: var(--retro-blue); /* Classic arcade blue */
+  color: #000;
+}
+.btn-start{
+  background: var(--retro-green); /* Classic arcade green - "START" */
+  color: #000;
+}
+.btn-leave{
+  background: var(--retro-red); /* Classic arcade red - "LEAVE" */
+  color: #000;
+}
+/* Default button (for other uses) uses gradient */
+.btn:not(.btn-login):not(.btn-register):not(.btn-create):not(.btn-join):not(.btn-send):not(.btn-ready):not(.btn-start):not(.btn-leave){
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  color: #000;
+}
+.btn:hover{ 
+  box-shadow: 
+    0 0 0 2px #000,
+    0 0 0 4px currentColor,
+    0 2px 0 #000,
+    0 2px 0 #000;
+  transform: translateY(2px);
+}
+.btn:active{
+  box-shadow: 
+    0 0 0 2px #000,
+    0 0 0 4px currentColor,
+    inset 0 2px 4px rgba(0,0,0,0.3);
+  transform: translateY(4px);
+}
+.btn:disabled{
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
 
 /* inputs */
 input[type='text'], input[type='password'], input[type='number'], select {
   width: 100%;
   padding:8px 10px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.4);
+  border: 2px solid rgba(0,255,247,0.2);
+  border-style: inset;
   color: var(--text);
-  border-radius:4px;
   outline: none;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  image-rendering: pixelated;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+  /* No transitions - pixel perfect */
 }
 input::placeholder{ color: rgba(255,255,255,0.35); }
+input:focus{
+  border-color: var(--accent);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6), 0 0 8px rgba(0,255,247,0.3);
+}
+select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300fff7' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 30px;
+}
 
 /* chat and messages */
 .chat{height:200px; background:rgba(0,0,0,0.2); overflow:auto; padding:8px; border-radius:4px;}
@@ -129,30 +220,24 @@ input::placeholder{ color: rgba(255,255,255,0.35); }
 .join-code{
   display:inline-block;
   padding:8px 12px;
-  background:linear-gradient(90deg,var(--accent-2),var(--accent));
+  background: var(--retro-yellow); /* Classic arcade yellow */
   color:#000;
-  border-radius:4px;
+  border: 2px solid #000;
   font-size:12px;
+  font-weight:700;
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+  box-shadow: 
+    0 0 0 2px #000,
+    0 0 0 4px currentColor,
+    0 3px 0 #000,
+    0 3px 0 #000;
+  letter-spacing: 2px;
 }
 
-.copy-btn{
-  margin-left:8px;
-  padding:6px 8px;
-  background:transparent;
-  border:1px solid rgba(255,255,255,0.06);
-  color:var(--text);
-  cursor:pointer;
-}
+/* Removed duplicate copy-btn - using the one above */
 
-.btn{
-  display:inline-block;
-  padding:10px 14px;
-  background:linear-gradient(90deg,var(--accent),var(--accent-2));
-  color:#001;
-  border-radius:6px;
-  cursor:pointer;
-  border: 2px solid rgba(0,0,0,0.2);
-}
+/* Removed duplicate .btn definition - using the one above */
 
 .small-muted{color:var(--muted); font-size:11px;}
 
@@ -162,8 +247,21 @@ input::placeholder{ color: rgba(255,255,255,0.35); }
 .px-small{font-size:10px}
 
 /* basic layout */
-.grid{display:grid; grid-template-columns: 1fr 320px; gap:16px}
-.panel{background:var(--panel); padding:12px; border-radius:6px}
+.grid{
+  display:grid; 
+  grid-template-columns: 1fr 320px; 
+  gap:16px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.panel{
+  background:var(--panel); 
+  padding:12px; 
+  border: 2px solid rgba(0,255,247,0.15);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+  image-rendering: pixelated;
+}
 
 /* chat and scoreboard placeholder */
 .chat{height:200px; background:rgba(0,0,0,0.2); overflow:auto; padding:8px}

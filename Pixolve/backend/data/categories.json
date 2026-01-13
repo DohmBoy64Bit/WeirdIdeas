@@ -1,29 +1,12 @@
 [
   {
-    "id": "0aa36e7c-4045-43d3-9f16-1a394fec88a2",
-    "name": "Nature",
-    "description": "Nature images",
-    "difficulty": 2,
-    "images": [],
-    "active": true
-  },
-  {
-    "id": "3f7733f8-f904-46a8-bb4c-9139c1d1d63d",
-    "name": "TestImport",
+    "id": "410630c1-d119-4104-ba96-0ba6cc168d1e",
+    "name": "The Simpsons",
     "description": null,
     "difficulty": 1,
     "images": [
-      "images\\8b168794-fdc3-4406-aca2-b8a6f49eef39_a.png",
-      "images\\3a2e9235-8843-472e-98ff-97ae20589768_b.jpg"
+      "images\\35cfc9ea-052e-4c3e-8625-d6c1cb6f9ad2_Homer.png"
     ],
-    "active": true
-  },
-  {
-    "id": "b845cb15-1dad-414a-ae60-600edb33312d",
-    "name": "TestCat",
-    "description": "desc",
-    "difficulty": 1,
-    "images": [],
     "active": true
   }
 ]

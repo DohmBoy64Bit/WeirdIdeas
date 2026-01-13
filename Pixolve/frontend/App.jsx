@@ -3,10 +3,12 @@ import React, {useState, useEffect} from 'react';
 import './styles.css';
 import Login from './components/Login';
 import Lobby from './components/Lobby';
+import AdminPanel from './components/AdminPanel';
 
 function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('pixolve_token'));
+  const [view, setView] = useState('lobby'); // 'lobby' or 'admin'
 
   useEffect(()=>{
     if (token){
@@ -41,11 +43,38 @@ function App() {
     setUser({username});
   }
 
-  if (!token) return <Login onLogin={onLogin} />
+  if (!token) return (
+    <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minHeight: '100vh'}}>
+      <Login onLogin={onLogin} />
+    </div>
+  )
 
   return (
-    <div>
-      <Lobby user={user} token={token} />
+    <div style={{display: 'flex', justifyContent: 'center', alignItems: 'flex-start', width: '100%', minHeight: '100vh', padding: '20px'}}>
+      <div style={{width: '100%', maxWidth: '1400px'}}>
+        {/* Navigation */}
+        <div style={{display: 'flex', gap: '12px', marginBottom: '20px', justifyContent: 'center'}}>
+          <button
+            className={`btn ${view === 'lobby' ? 'btn-ready' : ''}`}
+            onClick={() => setView('lobby')}
+          >
+            Lobby
+          </button>
+          <button
+            className={`btn ${view === 'admin' ? 'btn-ready' : ''}`}
+            onClick={() => setView('admin')}
+          >
+            Admin Panel
+          </button>
+        </div>
+
+        {/* Content */}
+        {view === 'lobby' ? (
+          <Lobby user={user} token={token} />
+        ) : (
+          <AdminPanel user={user} token={token} />
+        )}
+      </div>
     </div>
   );
 }
