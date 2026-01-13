@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react'
 
 // Proxy API and WebSocket calls to backend running on localhost:8000
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({
+    include: '**/*.{jsx,js}',
+  })],
   server: {
     proxy: {
       '/lobbies': { target: 'http://localhost:8000', changeOrigin: true },
