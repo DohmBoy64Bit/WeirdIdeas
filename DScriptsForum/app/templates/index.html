@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Script Hub - DScriptsForum{% endblock %}
+
+{% block content %}
+<div class="text-center py-20">
+    <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl mb-6">
+        <span class="block">Welcome to</span>
+        <span class="block text-primary-500">DScripts Forum</span>
+    </h1>
+    <p class="mt-3 max-w-md mx-auto text-base text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+        The premium hub for Roblox scripts, community discussions, and verified content.
+    </p>
+    <div class="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+        <div class="rounded-md shadow">
+            {% if user %}
+            <a href="/script/upload"
+                class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 md:py-4 md:text-lg md:px-10">
+                Upload Script
+            </a>
+            {% else %}
+            <a href="/forum"
+                class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 md:py-4 md:text-lg md:px-10">
+                Browse Forum
+            </a>
+            {% endif %}
+        </div>
+        <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
+            <a href="#recent"
+                class="w-full flex items-center justify-center px-8 py-3 border border-dark-700 text-base font-medium rounded-md text-primary-500 bg-dark-800 hover:bg-dark-700 md:py-4 md:text-lg md:px-10">
+                Latest Scripts
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Trending Section -->
+{% if trending_scripts %}
+<div class="mb-12">
+    <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+        <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+        </svg>
+        Trending Now
+    </h2>
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {% for script in trending_scripts %}
+        <div
+            class="bg-dark-800 overflow-hidden shadow-lg rounded-lg border border-dark-700 hover:border-primary-500 transition-colors duration-200">
+            <a href="/script/{{ script.id }}" class="block aspect-w-16 aspect-h-9 bg-dark-900 border-b border-dark-700">
+                {% if script.image_list and script.image_list|length > 0 %}
+                <img src="{{ script.image_list[0] }}" alt="{{ script.title }}" class="object-cover w-full h-48">
+                {% else %}
+                <img src="/static/Images/default/no_image.png" alt="No Image"
+                    class="object-cover w-full h-48 opacity-50">
+                {% endif %}
+            </a>
+            <div class="px-5 py-4">
+                <div class="flex justify-between items-start">
+                    <a href="/script/{{ script.id }}"
+                        class="text-lg font-bold text-white hover:text-primary-400 block truncate">{{ script.title
+                        }}</a>
+                    <span class="text-xs font-mono text-gray-500 bg-dark-900 px-2 py-0.5 rounded">v{{ script.version
+                        }}</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-400 line-clamp-2">{{ script.description }}</p>
+                <div class="mt-4 flex items-center justify-between text-xs text-gray-500">
+                    <span class="flex items-center">
+                        <span class="text-primary-400 font-medium mr-1">{{ script.uploader.username }}</span>
+                        {% if script.validated %}
+                        <svg class="h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        {% endif %}
+                    </span>
+                    <span class="flex items-center space-x-3">
+                        <span class="flex items-center" title="Downloads">
+                            <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            {{ script.downloads }}
+                        </span>
+                        <span class="flex items-center" title="Views">
+                            <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            {{ script.views }}
+                        </span>
+                        <span class="flex items-center text-red-500" title="Likes">
+                            <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            {{ script.likes_count }}
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Scripts -->
+<div id="recent">
+    <h2 class="text-2xl font-bold text-white mb-6">Recent Uploads</h2>
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {% for script in recent_scripts %}
+        <div
+            class="bg-dark-800 overflow-hidden shadow rounded-lg border border-dark-700 hover:bg-dark-750 transition-colors">
+            <a href="/script/{{ script.id }}" class="block aspect-w-16 aspect-h-9 bg-dark-900 border-b border-dark-700">
+                {% if script.image_list and script.image_list|length > 0 %}
+                <img src="{{ script.image_list[0] }}" alt="{{ script.title }}" class="object-cover w-full h-48">
+                {% else %}
+                <img src="/static/Images/default/no_image.png" alt="No Image"
+                    class="object-cover w-full h-48 opacity-50">
+                {% endif %}
+            </a>
+            <div class="px-5 py-4">
+                <a href="/script/{{ script.id }}" class="block">
+                    <h3 class="text-lg leading-6 font-medium text-white hover:text-primary-400">{{ script.title }}</h3>
+                </a>
+                <div class="mt-2 text-sm text-gray-400">
+                    <p class="line-clamp-2">{{ script.description }}</p>
+                </div>
+                <div class="mt-4 flex items-center justify-between text-xs text-gray-500 border-t border-dark-700 pt-3">
+                    <div class="flex items-center">
+                        <span>by {{ script.uploader.username }}</span>
+                        {% if script.validated %}
+                        <svg class="h-3 w-3 text-green-500 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <div class="flex space-x-2">
+                        <span>{{ script.created_at.strftime('%b %d') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-3 text-center py-10 text-gray-500 bg-dark-800 rounded-lg border border-dark-700">
+            No scripts uploaded yet.
+            {% if user %}
+            <a href="/script/upload" class="text-primary-500 hover:text-primary-400">Upload your first script!</a>
+            {% else %}
+            <a href="/auth/login" class="text-primary-500 hover:text-primary-400">Login</a> to be the first!
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

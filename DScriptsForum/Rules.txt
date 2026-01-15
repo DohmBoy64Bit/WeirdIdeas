@@ -1,0 +1,455 @@
+Project Vision
+
+Goal:
+Build a secure, modular, and professional forum + script hub for Roblox scripts using Python (FastAPI or Flask) + TailwindCSS, with:
+
+Full forum features (threads, posts, user CP, rep, ranks, awards)
+
+Script hub homepage like rscripts.net (recent, trending, likes, downloads)
+
+Admin validation system
+
+Responsive mobile-first UI
+
+Clean separation of concerns (PEP + DREY principles)
+
+1. Technology Decisions
+Backend
+
+Framework: FastAPI (preferred for async, validation, speed)
+Flask acceptable if simplicity is prioritized.
+
+Database: PostgreSQL (primary) + Redis (caching, sessions, rate limiting)
+
+ORM: SQLAlchemy 2.0 + Alembic migrations
+
+Auth:
+
+Argon2 password hashing
+
+JWT + HttpOnly cookies
+
+One-time registration codes
+
+File storage: Local or S3-compatible
+
+Queue: Celery or RQ (emails, processing)
+
+Frontend
+
+TailwindCSS
+
+Jinja2 templates (SSR first)
+
+Alpine.js for light interactivity
+
+No heavy SPA frameworks initially
+
+Security Stack
+
+CSRF via tokens
+
+Rate limiting
+
+Input validation with Pydantic
+
+Content sanitization (Bleach)
+
+CSP headers
+
+Download scanning placeholders
+
+2. Folder Structure (MANDATORY)
+project/
+│
+├── app/
+│   ├── main.py
+│   ├── config.py
+│   ├── extensions.py
+│   │
+│   ├── routes/
+│   │   ├── auth_routes.py
+│   │   ├── forum_routes.py
+│   │   ├── script_routes.py
+│   │   ├── user_routes.py
+│   │   └── admin_routes.py
+│   │
+│   ├── services/
+│   │   ├── auth_service.py
+│   │   ├── script_service.py
+│   │   ├── forum_service.py
+│   │   ├── email_service.py
+│   │   └── reputation_service.py
+│   │
+│   ├── models/
+│   │   ├── user.py
+│   │   ├── forum.py
+│   │   ├── script.py
+│   │   ├── reputation.py
+│   │   └── awards.py
+│   │
+│   ├── schemas/
+│   │   ├── auth.py
+│   │   ├── forum.py
+│   │   └── script.py
+│   │
+│   ├── templates/
+│   ├── static/
+│   └── utils/
+│       ├── security.py
+│       ├── validators.py
+│       └── rate_limit.py
+│
+├── tests/
+├── alembic/
+└── docker/
+
+
+Rules
+
+No file > 300 lines
+
+Routes contain ONLY HTTP logic
+
+Business logic ONLY in services
+
+Models NEVER import routes
+
+Templates contain ZERO business logic
+
+3. Core Features Specification
+3.1 Authentication
+
+Register with:
+
+username
+
+email
+
+password
+
+one-time invite/registration code
+
+Login
+
+Password reset via email token
+
+Sessions via JWT cookie
+
+2FA ready structure
+
+3.2 User System
+
+User CP:
+
+avatar
+
+bio
+
+rank
+
+awards
+
+reputation
+
+Roles:
+
+user
+
+moderator
+
+admin
+
+script-validator
+
+3.3 Forum Module
+
+Categories
+
+Threads
+
+Posts
+
+Editing history
+
+Moderation tools
+
+Reputation on posts
+
+Ranks shown next to avatar
+
+3.4 Script Hub Module
+
+Homepage like rscripts.net:
+
+Recent scripts
+
+Trending (views + likes formula)
+
+Like system
+
+Download button
+
+Admin validation badge
+
+Search
+
+Script page features:
+
+Title
+
+Description
+
+Code block
+
+Download
+
+Comments
+
+Version history
+
+Tags
+
+Views counter
+
+3.5 Awards System
+
+Admin granted
+
+Automatic (e.g., 100 posts)
+
+Shown in profile + posts
+
+4. Database Models (Core)
+User
+
+id
+
+username
+
+email
+
+password_hash
+
+rank
+
+reputation
+
+is_admin
+
+avatar
+
+created_at
+
+Script
+
+id
+
+title
+
+description
+
+code
+
+downloads
+
+likes
+
+validated
+
+uploader_id
+
+created_at
+
+ForumThread / Post
+
+Standard forum relations.
+
+5. Security Requirements
+MUST IMPLEMENT
+
+Argon2 hashing
+
+CSRF tokens
+
+Rate limits:
+
+login
+
+register
+
+post
+
+download
+
+XSS sanitization
+
+SQL injection protection via ORM
+
+File validation
+
+Content Security Policy
+
+Email verification
+
+Audit logs
+
+NEVER ALLOW
+
+Raw SQL from user input
+
+Unsanitized HTML
+
+Direct file execution
+
+Open redirects
+
+6. UI/UX Rules
+
+Mobile first
+
+Tailwind only
+
+No default component libraries
+
+Custom color scheme
+
+Avoid “AI look” by:
+
+uneven layouts
+
+custom cards
+
+real spacing
+
+non-generic gradients
+
+Pages:
+
+/ – script hub
+
+/forum
+
+/script/{id}
+
+/user/{name}
+
+/cp
+
+/admin
+
+7. Development Phases
+Phase 1 – Foundation
+
+Project skeleton
+
+Auth
+
+Users
+
+Basic templates
+
+Phase 2 – Forum
+
+Threads
+
+Posts
+
+Rep
+
+Phase 3 – Script Hub
+
+Upload
+
+Pages
+
+Likes
+
+Download
+
+Phase 4 – Admin
+
+Validation
+
+Moderation
+
+Awards
+
+Phase 5 – Hardening
+
+Security
+
+Rate limits
+
+Caching
+
+8. Rules for AI to Prevent Hallucinations / Creep
+HARD RULES
+
+❌ NEVER invent features not in this plan
+
+❌ NEVER add new tech stack items
+
+❌ NEVER create huge single files
+
+❌ NEVER mix logic layers
+
+❌ NEVER use inline SQL
+
+WHEN UNSURE
+
+Ask for:
+
+FastAPI or Flask preference
+
+color scheme
+
+postgres vs sqlite dev
+
+Do NOT assume
+
+CODE STYLE
+
+PEP8
+
+Type hints
+
+Docstrings
+
+Services pattern
+
+Repository pattern
+
+9. Example Task Format for AI
+
+Every response should include:
+
+File path
+
+Purpose
+
+Code
+
+Tests
+
+Security notes
+
+10. Next Step
+
+Tell me:
+
+FastAPI or Flask?
+
+Postgres or SQLite for start?
+
+Dark or light theme?
+
+Do you want Docker?
+
+I will generate:
+
+Exact project skeleton
+
+Auth module first
+
+Tailwind base theme

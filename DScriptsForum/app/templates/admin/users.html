@@ -1,0 +1,207 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_content %}
+<div x-data="{ 
+    showBanModal: false, 
+    banUserId: null, 
+    banUsername: '',
+    openBanModal(id, username) {
+        this.banUserId = id;
+        this.banUsername = username;
+        this.showBanModal = true;
+    }
+}" class="relative">
+    <div class="bg-dark-800 shadow rounded-lg border border-dark-700">
+        <div class="px-6 py-5 border-b border-dark-700 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-white">Manage Users</h3>
+            <div class="relative">
+                <form action="/admin/users" method="GET">
+                    <input type="text" name="q" placeholder="Search users..." value="{{ q }}"
+                        class="bg-dark-900 text-white rounded-md border-dark-600 focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border p-2">
+                </form>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-dark-700">
+                <thead class="bg-dark-900">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Reputation</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-dark-800 divide-y divide-dark-700">
+                    {% for u in users %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div
+                                    class="h-10 w-10 rounded-full bg-primary-900 flex items-center justify-center text-primary-300 font-bold">
+                                    {{ u.username[:2].upper() }}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-white">{{ u.username }}</div>
+                                    <div class="text-sm text-gray-500">Joined {{ u.created_at.strftime('%Y-%m-%d') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if u.is_admin %}bg-red-900 text-red-200{% else %}bg-dark-700 text-gray-300{% endif %}">
+                                {% if u.is_admin %}Admin{% else %}{{ u.role.value }}{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if u.is_active %}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-200">
+                                Active
+                            </span>
+                            {% else %}
+                            <div class="flex flex-col">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-200 w-max">
+                                    Banned
+                                </span>
+                                {% if u.ban_reason %}
+                                <p class="text-[10px] text-gray-500 mt-1 italic max-w-[120px] truncate"
+                                    title="{{ u.ban_reason }}">Reason: {{ u.ban_reason }}</p>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {{ u.reputation }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex items-center justify-end space-x-3">
+                                <form action="/admin/users/{{ u.id }}/toggle_admin" method="POST" class="inline"
+                                    onsubmit="return confirm('Change admin status?');">
+                                    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                                    <button type="submit" class="text-primary-400 hover:text-primary-300 mr-3">
+                                        {{ 'Demote' if u.is_admin else 'Promote' }}
+                                    </button>
+                                </form>
+
+                                {% if u.is_active %}
+                                <button type="button"
+                                    @click="openBanModal({{ u.id }}, '{{ u.username | replace("'", "\\'") }}')"
+                                    class="text-red-500 hover:text-red-400">
+                                    Ban
+                                </button>
+                                {% else %}
+                                <form action="/admin/users/{{ u.id }}/ban" method="POST" class="inline"
+                                    onsubmit="return confirm('Are you sure you want to unban this user?');">
+                                    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                                    <button type="submit" class="text-green-500 hover:text-green-400">
+                                        Unban
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ban User Modal -->
+    <!-- Ban User Modal -->
+    <div x-show="showBanModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div x-show="showBanModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-black bg-opacity-80 transition-opacity" aria-hidden="true"
+                @click="showBanModal = false"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- Modal panel -->
+            <div x-show="showBanModal" x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="inline-block align-middle bg-dark-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-dark-600">
+
+                <div class="absolute top-0 right-0 pt-4 pr-4">
+                    <button type="button" @click="showBanModal = false"
+                        class="text-gray-400 hover:text-gray-200 focus:outline-none">
+                        <span class="sr-only">Close</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form :action="'/admin/users/' + banUserId + '/ban'" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                    <div class="px-6 pt-6 pb-6">
+                        <div class="sm:flex sm:items-start">
+                            <div
+                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-900/50 sm:mx-0 sm:h-12 sm:w-12 border border-red-700">
+                                <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-5 sm:text-left flex-1">
+                                <h3 class="text-xl leading-6 font-bold text-white flex items-center justify-between"
+                                    id="modal-title">
+                                    <span>Ban User</span>
+                                    <span x-text="banUsername"
+                                        class="text-primary-400 text-base font-normal bg-dark-900 px-2 py-0.5 rounded border border-dark-700"></span>
+                                </h3>
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-400 mb-4">
+                                        Are you sure you want to ban this user? They will be signed out immediately and
+                                        unable to access their account.
+                                    </p>
+                                    <label for="reason" class="block text-sm font-medium text-gray-300 mb-2">
+                                        Reason for Ban <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea id="reason" name="reason" rows="4" required
+                                        class="appearance-none block w-full px-4 py-3 border border-dark-600 rounded-md shadow-sm placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm bg-dark-900 text-white resize-none"
+                                        placeholder="Violation of community guidelines, spamming, etc..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-dark-900/50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse border-t border-dark-700">
+                        <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-5 py-2.5 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-all shadow-lg shadow-red-900/20">
+                            Confirm Ban
+                        </button>
+                        <button type="button" @click="showBanModal = false"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-dark-600 shadow-sm px-5 py-2.5 bg-transparent text-base font-medium text-gray-300 hover:text-white hover:bg-dark-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

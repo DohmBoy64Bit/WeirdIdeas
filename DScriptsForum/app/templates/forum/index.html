@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Forum - DScriptsForum{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-white">Community Forum</h1>
+    {% if user %}
+    <!-- Could add 'Create Thread' button here if not category-specific -->
+    {% endif %}
+</div>
+
+<div class="bg-dark-800 shadow overflow-hidden sm:rounded-md border border-dark-700">
+    <ul class="divide-y divide-dark-700">
+        {% for category in categories %}
+        <li>
+            <a href="/forum/cat/{{ category.slug }}"
+                class="block hover:bg-dark-700 transition duration-150 ease-in-out">
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                {% if category.icon %}
+                                <i class="{{ category.icon }} text-primary-500 text-2xl mr-4"></i>
+                                {% else %}
+                                <span
+                                    class="h-10 w-10 rounded-full bg-dark-600 flex items-center justify-center text-primary-500 font-bold text-lg mr-4">
+                                    {{ category.name[0] }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-lg font-medium text-primary-400 truncate">{{ category.name }}</p>
+                                <p class="text-sm text-gray-400">{{ category.description }}</p>
+                            </div>
+                        </div>
+                        <div class="ml-2 flex-shrink-0 flex">
+                            <!-- Helper stats could go here -->
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-dark-900 text-gray-300">
+                                {{ category.threads|length }} Threads
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

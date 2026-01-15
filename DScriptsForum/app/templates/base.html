@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DScriptsForum{% endblock %}</title>
+    <!-- TailwindCSS (CDN for dev, configure build step later) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            900: '#121212',
+                            800: '#1e1e1e',
+                            700: '#2d2d2d',
+                        },
+                        primary: {
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <meta name="csrf-token" content="{{ request.state.csrf_token }}">
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="bg-dark-900 text-gray-200 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-dark-800 border-b border-dark-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-xl font-bold text-primary-500">DScripts</a>
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/" class="hover:bg-dark-700 px-3 py-2 rounded-md text-sm font-medium">Script Hub</a>
+                        <a href="/forum" class="hover:bg-dark-700 px-3 py-2 rounded-md text-sm font-medium">Forum</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    {% if user %}
+                    <!-- Notifications -->
+                    <!-- Notifications -->
+                    <div x-data="{ 
+                            count: 0, 
+                            open: false, 
+                            notifications: [],
+                            init() {
+                                this.fetchCount();
+                                setInterval(() => this.fetchCount(), 30000);
+                            },
+                            fetchCount() {
+                                fetch('/notifications/unread?t=' + new Date().getTime())
+                                    .then(r => r.json())
+                                    .then(d => this.count = d.count)
+                                    .catch(e => console.error(e));
+                            },
+                            fetchNotifications() {
+                                fetch('/notifications/?t=' + new Date().getTime())
+                                    .then(r => r.json())
+                                    .then(d => {
+                                        this.notifications = d;
+                                    });
+                            },
+                            toggle() {
+                                this.open = !this.open;
+                                if (this.open) {
+                                    this.fetchNotifications();
+                                }
+                            },
+                            markAllRead() {
+                                let formData = new FormData();
+                                const tokenMeta = document.querySelector('meta[name=\'csrf-token\']');
+                                if (tokenMeta) {
+                                    formData.append('csrf_token', tokenMeta.content);
+                                }
+                                
+                                fetch('/notifications/read-all', { method: 'POST', body: formData })
+                                    .then(response => {
+                                        if (response.ok) {
+                                            this.count = 0;
+                                            this.notifications.forEach(n => n.read = true);
+                                        } else {
+                                            console.error('Failed to mark notifications read');
+                                        }
+                                    });
+                            }
+                        }" @click.away="open = false" class="relative mr-4">
+
+                        <button @click="toggle()" class="relative text-gray-300 hover:text-white focus:outline-none">
+                            <span class="sr-only">View notifications</span>
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span x-show="count > 0" x-text="count"
+                                class="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-500 text-xs font-bold text-center text-white ring-2 ring-dark-800 transform -translate-y-1/2 translate-x-1/2"></span>
+                        </button>
+
+                        <!-- Dropdown -->
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 mt-2 w-80 bg-dark-800 border border-dark-700 rounded-md shadow-lg py-1 z-50">
+
+                            <div class="px-4 py-2 border-b border-dark-700 flex justify-between items-center">
+                                <span class="text-sm font-semibold text-gray-200">Notifications</span>
+                                <button @click="markAllRead()"
+                                    class="text-xs text-primary-500 hover:text-primary-400">Mark all read</button>
+                            </div>
+
+                            <div class="max-h-64 overflow-y-auto">
+                                <template x-for="note in notifications" :key="note.id">
+                                    <a :href="note.link || '#'"
+                                        class="block px-4 py-3 hover:bg-dark-700 transition duration-150 border-b border-dark-700 last:border-0">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0 pt-0.5">
+                                                <!-- Icon based on type -->
+                                                <div :class="{
+                                                    'bg-blue-500': note.type === 'system',
+                                                    'bg-green-500': note.type === 'like',
+                                                    'bg-purple-500': note.type === 'comment',
+                                                    'bg-yellow-500': note.type === 'download'
+                                                }" class="h-2 w-2 rounded-full mt-1.5"></div>
+                                            </div>
+                                            <div class="ml-3 w-0 flex-1">
+                                                <p class="text-sm text-gray-300" x-text="note.message"></p>
+                                                <p class="text-xs text-gray-500 mt-1"
+                                                    x-text="new Date(note.created_at).toLocaleDateString()"></p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </template>
+                                <div x-show="notifications.length === 0"
+                                    class="px-4 py-6 text-center text-gray-500 text-sm">
+                                    No notifications
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="/cp" class="px-3 py-2 rounded-md text-sm font-medium">Profile</a>
+                    <a href="/auth/logout"
+                        class="ml-4 px-3 py-2 rounded-md text-sm font-medium bg-red-600 hover:bg-red-700 text-white">Logout</a>
+                    {% else %}
+                    <a href="/auth/login" class="px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                    <a href="/auth/register"
+                        class="ml-4 px-3 py-2 rounded-md text-sm font-medium bg-primary-600 hover:bg-primary-500 text-white">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-800 border-t border-dark-700 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 text-sm">© 2024 DScriptsForum. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

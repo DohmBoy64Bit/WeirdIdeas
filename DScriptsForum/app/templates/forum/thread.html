@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ thread.title }} - DScriptsForum{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="/forum/cat/{{ thread.category.slug }}" class="text-gray-400 hover:text-white">&larr; Back to {{
+        thread.category.name }}</a>
+</div>
+
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-white break-words">{{ thread.title }}</h1>
+    <div class="flex items-center mt-2 text-sm text-gray-400">
+        <span>By {{ thread.author.username }}</span>
+        <span class="mx-2">&bull;</span>
+        <span>{{ thread.created_at.strftime('%b %d, %Y') }}</span>
+        {% if thread.locked %}
+        <span
+            class="ml-4 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900 text-red-200">Locked</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Thread Posts -->
+<div class="space-y-4">
+    {% for post in thread.posts %}
+    <div class="bg-dark-800 shadow sm:rounded-lg border border-dark-700">
+        <div class="px-4 py-5 sm:p-6 flex flex-col sm:flex-row">
+            <!-- Author Info -->
+            <div
+                class="sm:w-48 flex-shrink-0 mb-4 sm:mb-0 sm:mr-6 border-b sm:border-b-0 sm:border-r border-dark-700 pb-4 sm:pb-0 sm:pr-6 text-center sm:text-left">
+                <!-- Avatar -->
+                <div class="flex justify-center sm:justify-start mb-3">
+                    <div class="h-16 w-16 rounded-full overflow-hidden bg-dark-900">
+                        {% if post.author.avatar_url %}
+                        <img src="{{ post.author.avatar_url }}" alt="{{ post.author.username }}"
+                            class="w-full h-full object-cover">
+                        {% else %}
+                        <img src="/static/Images/default/default_avatar.png" alt="Default Avatar"
+                            class="w-full h-full object-cover">
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="font-bold text-primary-400 text-lg">{{ post.author.username }}</div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">{{ post.author.role.value }}</div>
+
+                <!-- Display simple badge based on role/rep for now -->
+                <div class="flex flex-wrap gap-1 mt-2">
+                    {% if post.author.is_admin %}
+                    <span
+                        class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-900/50 text-red-400 border border-red-900">ADMIN</span>
+                    {% endif %}
+                    {% if post.author.reputation >= 50 %}
+                    <span
+                        class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-900/50 text-yellow-400 border border-yellow-900">LEGEND</span>
+                    {% endif %}
+                </div>
+
+                <div class="mt-2 text-sm text-gray-400">
+                    <div>Rep: {{ post.author.reputation }}</div>
+                </div>
+            </div>
+
+            <!-- Post Content -->
+            <div class="flex-grow">
+                <div class="text-sm text-gray-500 mb-2 flex justify-between">
+                    <span>{{ post.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                    <span>#{{ loop.index }}</span>
+                </div>
+                <div class="prose prose-invert max-w-none text-gray-200">
+                    {{ post.content }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Reply Box -->
+{% if user and not thread.locked %}
+<div class="mt-8 bg-dark-800 shadow sm:rounded-lg border border-dark-700">
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-white mb-4">Post a Reply</h3>
+        <form action="/forum/reply" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+            <input type="hidden" name="thread_id" value="{{ thread.id }}">
+            <div>
+                <textarea name="content" rows="4" required
+                    class="block w-full bg-dark-900 border border-dark-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    placeholder="Write your reply here..."></textarea>
+            </div>
+            <div class="mt-4">
+                <button type="submit"
+                    class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none sm:text-sm">
+                    Post Reply
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% elif thread.locked %}
+<div class="mt-8 p-4 bg-red-900/20 border border-red-900 rounded-md text-red-200 text-center">
+    This thread is locked. You cannot reply.
+</div>
+{% endif %}
+{% endblock %}

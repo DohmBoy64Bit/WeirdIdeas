@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }}'s Profile - DScriptsForum{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Flash Messages -->
+    {% if error %}
+    <div class="bg-red-600 text-white px-4 py-3 rounded-lg mb-4">
+        {{ error }}
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="bg-green-600 text-white px-4 py-3 rounded-lg mb-4">
+        {{ success }}
+    </div>
+    {% endif %}
+
+    <!-- Profile Header -->
+    <div class="bg-dark-800 rounded-lg shadow-lg overflow-hidden mb-6">
+        <div class="h-32 bg-gradient-to-r from-primary-600 to-purple-600"></div>
+        <div class="px-6 pb-6">
+            <div class="flex items-end -mt-12 mb-4">
+                <!-- Avatar -->
+                <div class="h-24 w-24 rounded-full bg-dark-900 ring-4 ring-dark-800 overflow-hidden">
+                    {% if profile_user.avatar_url %}
+                    <img src="{{ profile_user.avatar_url }}" alt="{{ profile_user.username }}"
+                        class="w-full h-full object-cover">
+                    {% else %}
+                    <img src="/static/Images/default/default_avatar.png" alt="Default Avatar"
+                        class="w-full h-full object-cover">
+                    {% endif %}
+                </div>
+                <div class="ml-4 mb-1">
+                    <h1 class="text-3xl font-bold text-white">{{ profile_user.username }}</h1>
+                    <div class="text-gray-400 text-sm">Joined {{ profile_user.created_at.strftime('%B %Y') }}</div>
+                </div>
+                <div class="ml-auto mb-2 text-right">
+                    <div class="text-2xl font-bold text-yellow-500">{{ profile_user.reputation }}</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Reputation</div>
+                </div>
+            </div>
+
+            <!-- Badges -->
+            <div class="flex flex-wrap gap-2 mt-4">
+                {% for badge in badges %}
+                <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white {{ badge.color }}">
+                    <span class="mr-1">{{ badge.icon }}</span> {{ badge.name }}
+                </span>
+                {% endfor %}
+            </div>
+
+            <!-- Avatar Upload (Only for own profile) -->
+            {% if user and user.id == profile_user.id %}
+            <div class="mt-6 pt-6 border-t border-dark-700">
+                <h3 class="text-sm font-medium text-gray-300 mb-3">Change Avatar</h3>
+                <form action="/cp/avatar" method="POST" enctype="multipart/form-data" class="flex items-center gap-3">
+                    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                    <input type="file" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp" required
+                        class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-600 file:text-white hover:file:bg-primary-500">
+                    <button type="submit"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-md text-sm font-medium whitespace-nowrap">
+                        Upload
+                    </button>
+                </form>
+                <p class="text-xs text-gray-500 mt-2">Square images work best. Max 2MB, JPG/PNG/GIF/WebP</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Sidebar Stats -->
+        <div class="space-y-6">
+            <div class="bg-dark-800 rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-medium text-white mb-4">Stats</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Scripts Uploaded</span>
+                        <span class="text-white">{{ script_count }}</span>
+                    </div>
+                    <!-- Add more stats here later like 'Comments', 'Likes Received' -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content (Scripts) -->
+        <div class="md:col-span-2 space-y-6">
+            <h2 class="text-xl font-bold text-white">Uploaded Scripts</h2>
+            {% if scripts %}
+            <div class="grid gap-4">
+                {% for script in scripts %}
+                <a href="/script/{{ script.id }}"
+                    class="block bg-dark-800 rounded-lg shadow hover:bg-dark-700 transition duration-150 p-4 border-l-4 border-primary-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">{{ script.title }}</h3>
+                            <p class="text-sm text-gray-400 mt-1 line-clamp-2">{{ script.description }}</p>
+                        </div>
+                        <div class="flex items-center space-x-2 text-gray-500 text-sm">
+                            <span>❤️ {{ script.likes_count }}</span>
+                            <span>👁️ {{ script.views }}</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center text-xs text-gray-500">
+                        <span>v{{ script.version }}</span>
+                        <span class="mx-2">•</span>
+                        <span>{{ script.created_at.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-dark-800 rounded-lg p-8 text-center">
+                <p class="text-gray-400">No scripts uploaded yet.</p>
+                {% if user and user.id == profile_user.id %}
+                <a href="/script/upload" class="inline-block mt-4 text-primary-500 hover:text-primary-400">Upload your
+                    first script</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
