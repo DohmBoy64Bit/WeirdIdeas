@@ -51,8 +51,19 @@ class Orchestrator:
 
     def _save_ai_comment(self, post_id, parent_comment_id, comment_data):
         # Find or create a Zombie user
-        zombie_names = ["RottingRon", "ShamblingSally", "BrainBuffetBrian", "DecayDave"]
-        zombie_name = random.choice(zombie_names)
+        zombie_names = [
+            "RottingRon", "ShamblingSally", "BrainBuffetBrian", "DecayDave", 
+            "GoryGarry", "PutridPatty", "LimpingLarry", "ZombieZelda",
+            "NecroticNed", "FleshieFelicia", "StumpySteve", "MaggotMandy"
+        ]
+        
+        # Avoid duplicates in the same thread if possible
+        post = Post.query.get(post_id)
+        existing_authors = {c.author.username for c in post.comments}
+        available_names = [n for n in zombie_names if n not in existing_authors]
+        
+        # If we ran out of unique names, just pick from the full list
+        zombie_name = random.choice(available_names if available_names else zombie_names)
         zombie_user = User.query.filter_by(username=zombie_name).first()
         
         if not zombie_user:

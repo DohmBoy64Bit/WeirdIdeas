@@ -5,7 +5,7 @@ class QualityGate:
         self.max_depth = max_depth
         self.default_lexicon = ["moan", "shamble", "rot", "horde", "buffet", "gray matter", "brains", "undead", "shambler", "brains", "flesh", "decay", "gnaw", "limb"]
 
-    def validate(self, comment_data, parent_author=None, current_depth=0, allowed_lexicon=None):
+    def validate(self, comment_data, parent_author=None, current_depth=0, allowed_lexicon=None, participants=None):
         """
         Validates the generated comment against persona and safety rules.
         Returns (is_valid, reasons)
@@ -41,6 +41,15 @@ class QualityGate:
             author_ref = parent_author.lower()
             if f"@{author_ref}" not in body.lower() and f"u/{author_ref}" not in body.lower():
                 reasons.append(f"Missing reference to parent author @{parent_author}")
+
+        # 5b. Mention Whitelist Check (No hallucinated users)
+        if participants:
+            lowercase_participants = [p.lower() for p in participants]
+            # Find all strings starting with @ or u/
+            mentions = re.findall(r'[@|u/]([a-zA-Z0-9_]+)', body)
+            for mention in mentions:
+                if mention.lower() not in lowercase_participants:
+                    reasons.append(f"Mentioned non-existent user @{mention} (Hallucination)")
 
         # 6. Safety Check (Rule #3: No real locations or survival instructions)
         # This is a basic filter; LLM prompt engineering is the primary defense.

@@ -49,11 +49,15 @@ class ZombieGenerator:
                     
                     # 5. Quality Gate Validation
                     parent_author = parent_comment.author.username if parent_comment else post.author.username
+                    participants = {post.author.username}
+                    participants.update({c.author.username for c in post.comments})
+                    
                     is_valid, reasons = self.quality_gate.validate(
                         comment_data, 
                         parent_author, 
                         depth, 
-                        allowed_lexicon=style.get('lexicon')
+                        allowed_lexicon=style.get('lexicon'),
+                        participants=participants
                     )
                     
                     if is_valid:
@@ -87,16 +91,16 @@ class ZombieGenerator:
         
         prompt += "THEATER RULES (STRICT COMPLIANCE REQUIRED):\n"
         prompt += "1. Always respond in-universe. You are a rotting zombie.\n"
-        prompt += "2. Reference the actual parent author if replying (e.g., @Name or u/Name). Replace placeholders with the names provided in the context.\n"
+        prompt += "2. MENTIONS: ONLY reference users provided in the context below. DO NOT make up names. Reference the parent author if replying (e.g., @Name or u/Name).\n"
         prompt += "3. Include at least one zombie lexicon term.\n"
         prompt += "4. MAX 4 SENTENCES. Be concise.\n"
         prompt += "5. SAFETY: No sharing real locations or harmful instructions (Rule #3).\n"
-        prompt += "6. FLAIR: Apply 'NSFB' (Not Safe For Brains) flair if content is unusually gore-heavy or disturbing.\n"
+        prompt += "6. FLAIR: Apply 'NSFB' (Not Safe For Brains) flair if content is unusually gore-heavy. Use other flairs locally relevant to the user's role (e.g., 'Seasoned Rotter', 'Fresh Catch', 'Newly Bitten', 'Horde Leader') for variety.\n"
         
         prompt += "\nOUTPUT FORMAT: Valid JSON ONLY.\n"
         prompt += """{
     "body": "your comment text here",
-    "flair": "optional flair or null"
+    "flair": "optional flair name (e.g., 'Seasoned Rotter') or null"
 }"""
         return prompt
 
@@ -104,6 +108,11 @@ class ZombieGenerator:
         prompt = f"POST AUTHOR: {post.author.username}\n"
         prompt += f"POST TITLE: {post.title}\n"
         prompt += f"POST BODY: {post.body}\n"
+        
+        # Whitelist of participants for mentions
+        participants = {post.author.username}
+        participants.update({c.author.username for c in post.comments})
+        prompt += f"THREAD PARTICIPANTS: {', '.join(participants)}\n"
         
         if parent_comment:
             prompt += f"REPLYING TO u/{parent_comment.author.username}: \"{parent_comment.body}\"\n"

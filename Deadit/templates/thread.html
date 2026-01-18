@@ -190,6 +190,11 @@
                             <span class="flair"
                                 style="background: var(--blood-red); color: white; padding: 0 4px; border-radius: 3px; font-size: 0.8em; margin-left: 5px; font-weight: bold;">OP</span>
                             {% endif %}
+                            {% if reply.flair %}
+                            <span
+                                style="border: 1px solid var(--rotten-brown); padding: 0 4px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">{{
+                                reply.flair }}</span>
+                            {% endif %}
                         </div>
                         <div class="comment-body" style="color: var(--text-undead);">{{ reply.body }}</div>
                         <div class="comment-actions" style="margin-top: 10px; display: flex; gap: 15px;"
