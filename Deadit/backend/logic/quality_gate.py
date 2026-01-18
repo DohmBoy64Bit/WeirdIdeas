@@ -46,8 +46,10 @@ class QualityGate:
         if participants:
             lowercase_participants = [p.lower() for p in participants]
             # Find all strings starting with @ or u/
-            mentions = re.findall(r'[@|u/]([a-zA-Z0-9_]+)', body)
-            for mention in mentions:
+            mentions = re.findall(r'@([a-zA-Z0-9_]+)|u/([a-zA-Z0-9_]+)', body)
+            # mentions is a list of tuples, flatten it
+            flat_mentions = [m for pair in mentions for m in pair if m]
+            for mention in flat_mentions:
                 if mention.lower() not in lowercase_participants:
                     reasons.append(f"Mentioned non-existent user @{mention} (Hallucination)")
 
