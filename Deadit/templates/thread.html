@@ -34,6 +34,18 @@
                 <a href="{{ url_for('main.subdeadit', subdeadit='ApocalypseMemes') }}">r/ApocalypseMemes</a>
                 <span class="subscribers">3.1M shamblers</span>
             </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='UndeadRelationships') }}">r/UndeadRelationships</a>
+                <span class="subscribers">1.2M shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='RottingAesthetics') }}">r/RottingAesthetics</a>
+                <span class="subscribers">430K shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='HordeManagement') }}">r/HordeManagement</a>
+                <span class="subscribers">890K shamblers</span>
+            </li>
         </ul>
 
         <div class="rules">
@@ -125,11 +137,15 @@
                 style="background: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444;">
                 <div class="comment-meta" style="color: var(--text-decay); font-size: 0.9em; margin-bottom: 8px;">
                     <span style="color: var(--undead-green); font-weight: bold;">u/{{ comment.author.username }}</span>
+                    {% if comment.user_id == post.user_id %}
+                    <span class="flair"
+                        style="background: var(--blood-red); color: white; padding: 0 4px; border-radius: 3px; font-size: 0.8em; margin-left: 5px; font-weight: bold;">OP</span>
+                    {% endif %}
                     •
                     {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
                     {% if comment.flair %}
                     <span
-                        style="border: 1px solid var(--rotten-brown); padding: 0 4px; border-radius: 3px; font-size: 0.8em;">{{
+                        style="border: 1px solid var(--rotten-brown); padding: 0 4px; border-radius: 3px; font-size: 0.8em; margin-left: 5px;">{{
                         comment.flair }}</span>
                     {% endif %}
                 </div>
@@ -170,6 +186,10 @@
                         <div class="comment-meta" style="color: var(--text-decay); font-size: 0.9em;">
                             <span style="color: var(--undead-green); font-weight: bold;">u/{{ reply.author.username
                                 }}</span>
+                            {% if reply.user_id == post.user_id %}
+                            <span class="flair"
+                                style="background: var(--blood-red); color: white; padding: 0 4px; border-radius: 3px; font-size: 0.8em; margin-left: 5px; font-weight: bold;">OP</span>
+                            {% endif %}
                         </div>
                         <div class="comment-body" style="color: var(--text-undead);">{{ reply.body }}</div>
                         <div class="comment-actions" style="margin-top: 10px; display: flex; gap: 15px;"

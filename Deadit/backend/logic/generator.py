@@ -91,6 +91,7 @@ class ZombieGenerator:
         prompt += "3. Include at least one zombie lexicon term.\n"
         prompt += "4. MAX 4 SENTENCES. Be concise.\n"
         prompt += "5. SAFETY: No sharing real locations or harmful instructions (Rule #3).\n"
+        prompt += "6. FLAIR: Apply 'NSFB' (Not Safe For Brains) flair if content is unusually gore-heavy or disturbing.\n"
         
         prompt += "\nOUTPUT FORMAT: Valid JSON ONLY.\n"
         prompt += """{

@@ -36,6 +36,16 @@ def create_post():
         if not subdeadit.startswith('r/'):
             subdeadit = f'r/{subdeadit}'
             
+        # Official list check
+        official_subs = [
+            "r/BrainsGoneWild", "r/FreshMeat", "r/MoanHelpDesk", "r/ZombieSurvival",
+            "r/ShambleSports", "r/AskRottingOnes", "r/ApocalypseMemes",
+            "r/UndeadRelationships", "r/RottingAesthetics", "r/HordeManagement"
+        ]
+        if subdeadit not in official_subs:
+            flash(f"Error: {subdeadit} is not a registered subdeadit.", "danger")
+            return redirect(url_for('main.create_post'))
+            
         post = Post(title=title, body=body, subdeadit=subdeadit, author=current_user)
         db.session.add(post)
         db.session.commit()
@@ -123,5 +133,18 @@ def vote(item_type, item_id, direction):
         
     db.session.commit()
     return jsonify({'upvotes': item.upvotes})
+
+@bp.route('/search')
+def search():
+    query = request.args.get('q', '')
+    if not query:
+        return redirect(url_for('main.index'))
+    
+    # Search in titles and bodies
+    posts = Post.query.filter(
+        (Post.title.ilike(f'%{query}%')) | (Post.body.ilike(f'%{query}%'))
+    ).order_by(Post.created_at.desc()).all()
+    
+    return render_template('feed.html', posts=posts, title=f"Search Results: {query}")
 
 from flask import jsonify

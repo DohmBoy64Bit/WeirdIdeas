@@ -71,4 +71,26 @@ class Orchestrator:
         )
         db.session.add(comment)
         db.session.commit()
+        
+        # --- Horde Mentality: Recursive Triggers ---
+        import threading
+        from flask import current_app
+        app = current_app._get_current_object()
+        
+        # 1. Deepening (Reply to this AI moan)
+        # Probability decays: 60% at root, 30% at level 1, 0% at level 2 (since reply would be level 3)
+        depth = 0
+        temp = comment
+        while temp.parent:
+            depth += 1
+            temp = temp.parent
+            
+        deep_prob = 0.6 if depth == 0 else (0.3 if depth == 1 else 0)
+        if random.random() < deep_prob:
+            threading.Thread(target=self.orchestrate_moan, args=(post_id, comment.id, app)).start()
+            
+        # 2. Branching (New Top-Level moan on this post)
+        # 30% chance to simulate another zombie joining the thread independently
+        if random.random() < 0.3:
+            threading.Thread(target=self.orchestrate_moan, args=(post_id, None, app)).start()
 

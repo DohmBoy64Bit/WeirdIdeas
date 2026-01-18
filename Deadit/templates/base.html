@@ -407,10 +407,10 @@
                 </div>
             </a>
 
-            <div class="search-bar">
+            <form action="{{ url_for('main.search') }}" method="GET" class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search for brains...">
-            </div>
+                <input type="text" name="q" placeholder="Search for brains...">
+            </form>
             <div class="user-actions">
                 {% if current_user.is_authenticated %}
                 <span><i class="fas fa-user-injured"></i> u/{{ current_user.username }}</span>
