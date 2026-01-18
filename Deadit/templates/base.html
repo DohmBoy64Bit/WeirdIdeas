@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadit - {{ title|default('The Undead Social Network') }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Styles adapted from deadit.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --undead-green: #3a7d34;
+            --rotten-brown: #5d4037;
+            --blood-red: #c62828;
+            --brain-gray: #757575;
+            --apoc-bg: #1a1a1a;
+            --post-bg: #2d2d2d;
+            --text-undead: #e0e0e0;
+            --text-decay: #b0b0b0;
+        }
+
+        body {
+            background-color: var(--apoc-bg);
+            color: var(--text-undead);
+            background-image: radial-gradient(circle at 10% 20%, rgba(58, 125, 52, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(197, 40, 40, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        header {
+            background-color: rgba(26, 26, 26, 0.95);
+            border-bottom: 2px solid var(--blood-red);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            color: var(--undead-green);
+            font-size: 2.5rem;
+        }
+
+        .logo-text {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--blood-red);
+            text-shadow: 2px 2px 0 #000;
+            letter-spacing: 1px;
+        }
+
+        .logo-tagline {
+            font-size: 0.9rem;
+            color: var(--text-decay);
+            font-style: italic;
+            margin-top: -5px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: #333;
+            border-radius: 20px;
+            padding: 8px 15px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: var(--text-undead);
+            width: 100%;
+            padding: 5px;
+            outline: none;
+        }
+
+        .search-bar i {
+            color: var(--brain-gray);
+            margin-right: 8px;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--undead-green);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--rotten-brown);
+            color: white;
+        }
+
+        .main-content {
+            margin-top: 25px;
+            min-height: 60vh;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 10px;
+            background-color: var(--rotten-brown);
+            border: 1px solid var(--blood-red);
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Auth Form Styles */
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: var(--post-bg);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .auth-title {
+            text-align: center;
+            color: var(--undead-green);
+            margin-bottom: 20px;
+        }
+
+        /* Layout Styles from deadit.html */
+        .main-content-flex {
+            display: flex;
+            gap: 25px;
+            margin-top: 25px;
+            min-height: 60vh;
+        }
+
+        .sidebar {
+            width: 25%;
+            background-color: var(--post-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid var(--blood-red);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar h3 {
+            color: var(--undead-green);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subdeadit-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .rules-list {
+            padding-left: 20px;
+            color: var(--text-decay);
+        }
+
+        .subdeadit-list li {
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--brain-gray);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .subdeadit-list li a {
+            color: var(--text-undead);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .subdeadit-list li a:hover {
+            color: var(--undead-green);
+        }
+
+        .subscribers {
+            color: var(--text-decay);
+            font-size: 0.8rem;
+        }
+
+        .rules {
+            margin-top: 25px;
+        }
+
+        .rules-list li {
+            margin-bottom: 8px;
+            color: var(--text-decay);
+        }
+
+        .rules-list {
+            padding-left: 20px;
+        }
+
+        .posts-container {
+            width: 75%;
+        }
+
+        /* Post Styles refinement */
+        .post {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--post-bg);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            border: 1px solid #444;
+        }
+
+        .post::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--undead-green);
+        }
+
+        .vote-section {
+            width: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-right: 15px;
+        }
+
+        .vote-btn {
+            background: none;
+            border: none;
+            color: var(--brain-gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .vote-btn:hover {
+            color: var(--undead-green);
+        }
+
+        .downvote:hover {
+            color: var(--blood-red);
+        }
+
+        .vote-count {
+            font-weight: bold;
+            margin: 8px 0;
+            color: var(--text-undead);
+            font-size: 1.2rem;
+        }
+
+        .post-content {
+            flex: 1;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-decay);
+            font-size: 0.9rem;
+        }
+
+        .subdeadit {
+            color: var(--undead-green);
+            font-weight: bold;
+        }
+
+        .posted-by {
+            color: var(--text-decay);
+        }
+
+        .post-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .post-body {
+            color: var(--text-undead);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .post-action {
+            background: none;
+            border: none;
+            color: var(--text-decay);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .post-action:hover {
+            color: var(--undead-green);
+        }
+
+        /* Comment Form Styles */
+        .comment-form {
+            background-color: var(--post-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+        }
+
+        .comment-input {
+            width: 100%;
+            background-color: #333;
+            border: 1px solid #555;
+            color: var(--text-undead);
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 12px;
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--undead-green);
+        }
+
+        a {
+            color: var(--undead-green);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container header-container">
+            <a href="{{ url_for('main.index') }}" class="logo">
+                <i class="fas fa-skull-crossbones logo-icon"></i>
+                <div>
+                    <h1 class="logo-text">DEADIT</h1>
+                    <p class="logo-tagline">The social network for the recently deceased</p>
+                </div>
+            </a>
+
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search for brains...">
+            </div>
+            <div class="user-actions">
+                {% if current_user.is_authenticated %}
+                <span><i class="fas fa-user-injured"></i> u/{{ current_user.username }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary">Logout</a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Join the Horde</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="container main-content">
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        document.addEventListener('click', function (e) {
+            const voteBtn = e.target.closest('.vote-btn, .post-action');
+            if (voteBtn && (voteBtn.classList.contains('upvote') || voteBtn.classList.contains('downvote') || voteBtn.innerHTML.includes('fa-arrow-up') || voteBtn.innerHTML.includes('fa-arrow-down'))) {
+                e.preventDefault();
+
+                // Find parent container with data attrs
+                const container = voteBtn.closest('[data-item-type]');
+                if (!container) return;
+
+                const itemType = container.getAttribute('data-item-type');
+                const itemId = container.getAttribute('data-item-id');
+                const direction = (voteBtn.classList.contains('downvote') || voteBtn.innerHTML.includes('fa-arrow-down')) ? 'down' : 'up';
+                const voteCount = container.querySelector('.vote-count');
+
+                fetch(`/vote/${itemType}/${itemId}/${direction}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                    .then(response => {
+                        if (response.status === 401) {
+                            window.location.href = "{{ url_for('auth.login') }}";
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.upvotes !== undefined) {
+                            if (voteCount) {
+                                voteCount.textContent = data.upvotes;
+                            }
+                            // Visual feedback
+                            voteBtn.style.color = direction === 'up' ? 'var(--undead-green)' : 'var(--blood-red)';
+                            setTimeout(() => {
+                                voteBtn.style.color = '';
+                            }, 500);
+                        }
+                    })
+                    .catch(err => console.error('Voting failed:', err));
+            }
+
+            // Reply form toggling
+            if (e.target.closest('.reply-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('[data-item-id]');
+                const replyForm = document.getElementById(`reply-${container.getAttribute('data-item-id')}`);
+                if (replyForm) {
+                    replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+                    if (replyForm.style.display === 'block') {
+                        replyForm.querySelector('textarea').focus();
+                    }
+                }
+            }
+
+            if (e.target.closest('.cancel-reply')) {
+                e.preventDefault();
+                const replyForm = e.target.closest('.reply-form');
+                if (replyForm) {
+                    replyForm.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

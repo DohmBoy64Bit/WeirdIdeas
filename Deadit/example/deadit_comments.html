@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadit - For the Undead Community</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --undead-green: #3a7d34;
+            --rotten-brown: #5d4037;
+            --blood-red: #c62828;
+            --brain-gray: #757575;
+            --apoc-bg: #1a1a1a;
+            --post-bg: #2d2d2d;
+            --text-undead: #e0e0e0;
+            --text-decay: #b0b0b0;
+            --comment-level-1: #333;
+            --comment-level-2: #3a3a3a;
+            --comment-level-3: #404040;
+        }
+
+        body {
+            background-color: var(--apoc-bg);
+            color: var(--text-undead);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(58, 125, 52, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(197, 40, 40, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: rgba(26, 26, 26, 0.95);
+            border-bottom: 2px solid var(--blood-red);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            color: var(--undead-green);
+            font-size: 2.5rem;
+        }
+
+        .logo-text {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--blood-red);
+            text-shadow: 2px 2px 0 #000;
+            letter-spacing: 1px;
+        }
+
+        .logo-tagline {
+            font-size: 0.9rem;
+            color: var(--text-decay);
+            font-style: italic;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: #333;
+            border-radius: 20px;
+            padding: 8px 15px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: var(--text-undead);
+            width: 100%;
+            padding: 5px;
+            outline: none;
+        }
+
+        .search-bar i {
+            color: var(--brain-gray);
+            margin-right: 8px;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--undead-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2d6a28;
+        }
+
+        .btn-secondary {
+            background-color: var(--rotten-brown);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a3329;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 25%;
+            background-color: var(--post-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid var(--blood-red);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar h3 {
+            color: var(--undead-green);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subdeadit-list {
+            list-style: none;
+        }
+
+        .subdeadit-list li {
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--brain-gray);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .subdeadit-list li a {
+            color: var(--text-undead);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .subdeadit-list li a:hover {
+            color: var(--undead-green);
+        }
+
+        .subscribers {
+            color: var(--text-decay);
+            font-size: 0.8rem;
+        }
+
+        .rules {
+            margin-top: 25px;
+        }
+
+        .rules-list {
+            padding-left: 20px;
+            color: var(--text-decay);
+        }
+
+        .rules-list li {
+            margin-bottom: 8px;
+        }
+
+        /* Posts */
+        .posts-container {
+            width: 75%;
+        }
+
+        .post {
+            background-color: var(--post-bg);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #444;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--undead-green);
+        }
+
+        .vote-section {
+            width: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-right: 15px;
+        }
+
+        .vote-btn {
+            background: none;
+            border: none;
+            color: var(--brain-gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .vote-btn:hover {
+            color: var(--undead-green);
+        }
+
+        .downvote:hover {
+            color: var(--blood-red);
+        }
+
+        .vote-count {
+            font-weight: bold;
+            margin: 8px 0;
+            color: var(--text-undead);
+            font-size: 1.2rem;
+        }
+
+        .post-content {
+            flex: 1;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-decay);
+            font-size: 0.9rem;
+        }
+
+        .subdeadit {
+            color: var(--undead-green);
+            font-weight: bold;
+        }
+
+        .posted-by {
+            color: var(--text-decay);
+        }
+
+        .post-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .post-body {
+            color: var(--text-undead);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .post-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-decay);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .post-action:hover {
+            color: var(--undead-green);
+        }
+
+        .post-image {
+            width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            margin-top: 30px;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+
+        .comments-title {
+            color: var(--undead-green);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-form {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            background-color: #444;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 15px;
+            color: var(--text-undead);
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: var(--undead-green);
+        }
+
+        .comment-form button {
+            background-color: var(--undead-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .comment-form button:hover {
+            background-color: #2d6a28;
+        }
+
+        .comments-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .comment {
+            background-color: var(--comment-level-1);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .comment.reply-level-2 {
+            background-color: var(--comment-level-2);
+            margin-left: 30px;
+        }
+
+        .comment.reply-level-3 {
+            background-color: var(--comment-level-3);
+            margin-left: 60px;
+        }
+
+        .comment-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-decay);
+            font-size: 0.85rem;
+        }
+
+        .comment-author {
+            color: var(--undead-green);
+            font-weight: bold;
+        }
+
+        .comment-body {
+            color: var(--text-undead);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .comment-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-decay);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .comment-action:hover {
+            color: var(--undead-green);
+        }
+
+        .reply-form {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .reply-form.active {
+            display: block;
+        }
+
+        .reply-form textarea {
+            width: 100%;
+            background-color: #444;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 10px;
+            color: var(--text-undead);
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 60px;
+            margin-bottom: 10px;
+        }
+
+        .reply-form .reply-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: rgba(26, 26, 26, 0.95);
+            border-top: 2px solid var(--rotten-brown);
+            margin-top: 40px;
+            padding: 30px 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .footer-section {
+            width: 30%;
+            margin-bottom: 20px;
+        }
+
+        .footer-section h4 {
+            color: var(--undead-green);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            color: var(--text-decay);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--undead-green);
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--brain-gray);
+            font-size: 0.9rem;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar, .posts-container {
+                width: 100%;
+            }
+            
+            .footer-section {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .logo-text {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Decorative elements */
+        .blood-splatter {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .splatter-1 {
+            top: 10%;
+            left: 5%;
+            transform: rotate(45deg);
+            color: var(--blood-red);
+        }
+
+        .splatter-2 {
+            bottom: 10%;
+            right: 5%;
+            transform: rotate(-20deg);
+            color: var(--blood-red);
+        }
+
+        .zombie-icon {
+            color: var(--undead-green);
+        }
+
+        .flair {
+            display: inline-block;
+            background-color: var(--rotten-brown);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative blood splatters -->
+    <div class="blood-splatter splatter-1">
+        <i class="fas fa-tint" style="font-size: 300px;"></i>
+    </div>
+    <div class="blood-splatter splatter-2">
+        <i class="fas fa-tint" style="font-size: 250px;"></i>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-skull-crossbones logo-icon"></i>
+                <div>
+                    <h1 class="logo-text">DEADIT</h1>
+                    <p class="logo-tagline">The social network for the recently deceased</p>
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search for brains...">
+            </div>
+            
+            <div class="user-actions">
+                <button class="btn btn-secondary">
+                    <i class="fas fa-user"></i> Undead Profile
+                </button>
+                <button class="btn btn-primary" id="newPostBtn">
+                    <i class="fas fa-plus"></i> New Moan
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h3><i class="fas fa-brain"></i> Trending Subdeadits</h3>
+            <ul class="subdeadit-list">
+                <li>
+                    <a href="#">r/BrainsGoneWild</a>
+                    <span class="subscribers">2.3M shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/FreshMeat</a>
+                    <span class="subscribers">1.8M shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/MoanHelpDesk</a>
+                    <span class="subscribers">950K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/ZombieSurvival</a>
+                    <span class="subscribers">745K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/ShambleSports</a>
+                    <span class="subscribers">620K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/AskRottingOnes</a>
+                    <span class="subscribers">540K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/ApocalypseMemes</a>
+                    <span class="subscribers">3.1M shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/UndeadRelationships</a>
+                    <span class="subscribers">410K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/RottingAesthetics</a>
+                    <span class="subscribers">380K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/HordeManagement</a>
+                    <span class="subscribers">290K shamblers</span>
+                </li>
+            </ul>
+            
+            <div class="rules">
+                <h3><i class="fas fa-book-dead"></i> Community Rules</h3>
+                <ol class="rules-list">
+                    <li>No discrimination based on decomposition level</li>
+                    <li>Keep moans to a reasonable volume</li>
+                    <li>No sharing survivor bunker locations</li>
+                    <li>Tag NSFB (Not Safe For Brains) appropriately</li>
+                    <li>Respect the newly turned</li>
+                    <li>No false "cure" claims</li>
+                    <li>No bragging about fresh catches in r/NewlyTurned</li>
+                </ol>
+            </div>
+        </aside>
+
+        <!-- Posts Container -->
+        <main class="posts-container">
+            <!-- Post 1 -->
+            <article class="post" data-post-id="1">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">1.2k</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/BrainsGoneWild</span>
+                        <span class="posted-by">Posted by u/RottingRon 8 hours ago</span>
+                        <span class="flair">Fresh Catch</span>
+                    </div>
+                    
+                    <h2 class="post-title">Just found a survivor camp with 20+ untouched brains. Best day since the turn!</h2>
+                    
+                    <div class="post-body">
+                        <p>I was shambling through the old mall when I caught the scent. Followed it to a hidden bunker in the food court. They had reinforced doors but we just waited them out. After three days, they had to come out for supplies. Let's just say it was an all-you-can-eat buffet!</p>
+                        <p>Anyone else having luck with mall locations? Seems like survivors think we can't navigate through Claire's.</p>
+                        
+                        <img src="https://images.unsplash.com/photo-1533090161767-e6ffed986c88?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Abandoned mall" class="post-image">
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> <span class="comment-count">427</span> Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h3 class="comments-title"><i class="fas fa-comment-dots"></i> Moans (<span class="comment-count">427</span>)</h3>
+                        
+                        <!-- Comment Form -->
+                        <div class="comment-form">
+                            <textarea placeholder="Add a moan... (Remember, no screaming)"></textarea>
+                            <button class="add-comment-btn" data-post-id="1">Moan</button>
+                        </div>
+                        
+                        <!-- Comments Container -->
+                        <div class="comments-container" id="comments-1">
+                            <!-- Sample Comment 1 -->
+                            <div class="comment">
+                                <div class="comment-meta">
+                                    <span class="comment-author">u/ShamblingSally</span>
+                                    <span>5 hours ago</span>
+                                    <span class="flair">Seasoned Rotter</span>
+                                </div>
+                                <div class="comment-body">
+                                    Nice score! The mall by my old neighborhood has been picked clean for months. Survivors have gotten smart and started setting up decoy camps.
+                                </div>
+                                <div class="comment-actions">
+                                    <button class="comment-action upvote-comment"><i class="fas fa-arrow-up"></i> 142</button>
+                                    <button class="comment-action reply-btn"><i class="fas fa-reply"></i> Reply</button>
+                                </div>
+                                
+                                <!-- Reply Form -->
+                                <div class="reply-form">
+                                    <textarea placeholder="Reply to u/ShamblingSally..."></textarea>
+                                    <div class="reply-buttons">
+                                        <button class="btn-secondary reply-submit">Reply</button>
+                                        <button class="btn-secondary reply-cancel">Cancel</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Replies -->
+                                <div class="replies-container">
+                                    <!-- Nested Reply -->
+                                    <div class="comment reply-level-2">
+                                        <div class="comment-meta">
+                                            <span class="comment-author">u/RottingRon</span>
+                                            <span>4 hours ago</span>
+                                            <span class="flair">OP</span>
+                                        </div>
+                                        <div class="comment-body">
+                                            @ShamblingSally Yeah, I've seen those decoys. They usually have that "too good to be true" smell. This one had the real fear scent though.
+                                        </div>
+                                        <div class="comment-actions">
+                                            <button class="comment-action upvote-comment"><i class="fas fa-arrow-up"></i> 89</button>
+                                            <button class="comment-action reply-btn"><i class="fas fa-reply"></i> Reply</button>
+                                        </div>
+                                        
+                                        <!-- Reply Form -->
+                                        <div class="reply-form">
+                                            <textarea placeholder="Reply to u/RottingRon..."></textarea>
+                                            <div class="reply-buttons">
+                                                <button class="btn-secondary reply-submit">Reply</button>
+                                                <button class="btn-secondary reply-cancel">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Another Nested Reply -->
+                                    <div class="comment reply-level-2">
+                                        <div class="comment-meta">
+                                            <span class="comment-author">u/BrainBuffetBrian</span>
+                                            <span>3 hours ago</span>
+                                        </div>
+                                        <div class="comment-body">
+                                            @ShamblingSally Try looking for campfires at night. Survivors get careless after dark. The glow gives them away every time.
+                                        </div>
+                                        <div class="comment-actions">
+                                            <button class="comment-action upvote-comment"><i class="fas fa-arrow-up"></i> 67</button>
+                                            <button class="comment-action reply-btn"><i class="fas fa-reply"></i> Reply</button>
+                                        </div>
+                                        
+                                        <!-- Reply Form -->
+                                        <div class="reply-form">
+                                            <textarea placeholder="Reply to u/BrainBuffetBrian..."></textarea>
+                                            <div class="reply-buttons">
+                                                <button class="btn-secondary reply-submit">Reply</button>
+                                                <button class="btn-secondary reply-cancel">Cancel</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Nested reply level 3 -->
+                                        <div class="replies-container">
+                                            <div class="comment reply-level-3">
+                                                <div class="comment-meta">
+                                                    <span class="comment-author">u/ShamblingSally</span>
+                                                    <span>2 hours ago</span>
+                                                </div>
+                                                <div class="comment-body">
+                                                    @BrainBuffetBrian Good tip! My night vision isn't what it used to be since my left eye fell out, but I'll give it a try.
+                                                </div>
+                                                <div class="comment-actions">
+                                                    <button class="comment-action upvote-comment"><i class="fas fa-arrow-up"></i> 42</button>
+                                                    <button class="comment-action reply-btn"><i class="fas fa-reply"></i> Reply</button>
+                                                </div>
+                                                
+                                                <!-- Reply Form -->
+                                                <div class="reply-form">
+                                                    <textarea placeholder="Reply to u/ShamblingSally..."></textarea>
+                                                    <div class="reply-buttons">
+                                                        <button class="btn-secondary reply-submit">Reply</button>
+                                                        <button class="btn-secondary reply-cancel">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sample Comment 2 -->
+                            <div class="comment">
+                                <div class="comment-meta">
+                                    <span class="comment-author">u/OneArmWilly</span>
+                                    <span>2 hours ago</span>
+                                    <span class="flair">Missing Limb</span>
+                                </div>
+                                <div class="comment-body">
+                                    Wish I could've joined! My right leg gave out yesterday (damn rusted knee joint) so I'm stuck near the highway overpass. Anyone in the area want to bring me some leftovers? I'll owe you one!
+                                </div>
+                                <div class="comment-actions">
+                                    <button class="comment-action upvote-comment"><i class="fas fa-arrow-up"></i> 98</button>
+                                    <button class="comment-action reply-btn"><i class="fas fa-reply"></i> Reply</button>
+                                </div>
+                                
+                                <!-- Reply Form -->
+                                <div class="reply-form">
+                                    <textarea placeholder="Reply to u/OneArmWilly..."></textarea>
+                                    <div class="reply-buttons">
+                                        <button class="btn-secondary reply-submit">Reply</button>
+                                        <button class="btn-secondary reply-cancel">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Post 2 -->
+            <article class="post" data-post-id="2">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">847</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/MoanHelpDesk</span>
+                        <span class="posted-by">Posted by u/NewlyBitten 1 day ago</span>
+                        <span class="flair">Help Needed</span>
+                    </div>
+                    
+                    <h2 class="post-title">How do I stop my left arm from falling off? It's really affecting my shambling.</h2>
+                    
+                    <div class="post-body">
+                        <p>Got turned about a week ago and my decomposition is progressing faster than expected. My left arm keeps detaching at the shoulder, especially when I'm chasing survivors. I've tried duct tape, rusty wire, and even chewing gum but nothing holds for more than a few hours.</p>
+                        <p>Any long-term solutions? Should I just embrace the one-armed lifestyle? My coordination is already terrible enough with two arms.</p>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> <span class="comment-count">203</span> Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h3 class="comments-title"><i class="fas fa-comment-dots"></i> Moans (<span class="comment-count">203</span>)</h3>
+                        
+                        <!-- Comment Form -->
+                        <div class="comment-form">
+                            <textarea placeholder="Add a moan... (Remember, no screaming)"></textarea>
+                            <button class="add-comment-btn" data-post-id="2">Moan</button>
+                        </div>
+                        
+                        <!-- Comments Container -->
+                        <div class="comments-container" id="comments-2">
+                            <!-- Sample Comment -->
+                            <div class="comment">
+                                <div class="comment-meta">
+                                    <span class="comment-author">u/DuctTapeDave</span>
+                                    <span>18 hours ago</span>
+                                    <span class="flair">Improvised Solutions</span>
+                                </div>
+                                <div class="comment-body">
+                                    You need the good stuff - barbed wire. Wrap it tight around the joint, then use a soldering iron (if you can find one) to cauterize the flesh around it. Hurts like hell but it'll hold for weeks.
+                                </div>
+                                <div class="comment-actions">
+                                    <button class="comment-action upvote-comment"><i class="fas fa-arrow-up"></i> 156</button>
+                                    <button class="comment-action reply-btn"><i class="fas fa-reply"></i> Reply</button>
+                                </div>
+                                
+                                <!-- Reply Form -->
+                                <div class="reply-form">
+                                    <textarea placeholder="Reply to u/DuctTapeDave..."></textarea>
+                                    <div class="reply-buttons">
+                                        <button class="btn-secondary reply-submit">Reply</button>
+                                        <button class="btn-secondary reply-cancel">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- NEW POST 3 -->
+            <article class="post" data-post-id="3">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">1.5k</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/UndeadRelationships</span>
+                        <span class="posted-by">Posted by u/LonelyWalker 2 days ago</span>
+                        <span class="flair">Dating Advice</span>
+                    </div>
+                    
+                    <h2 class="post-title">My zombie girlfriend keeps trying to eat my brains. Is this normal?</h2>
+                    
+                    <div class="post-body">
+                        <p>We both got turned around the same time during the initial outbreak. At first, things were great - shambling through abandoned cities, sharing the occasional survivor, the usual zombie romance. But lately, she's been giving me "the look" and I caught her sniffing near my ear yesterday.</p>
+                        <p>I still have feelings for her (what's left of them anyway), but I'm worried she sees me as more of a snack than a partner. Has anyone else dealt with this? Do I need to have "the talk" with her about boundaries?</p>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> <span class="comment-count">512</span> Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h3 class="comments-title"><i class="fas fa-comment-dots"></i> Moans (<span class="comment-count">512</span>)</h3>
+                        
+                        <!-- Comment Form -->
+                        <div class="comment-form">
+                            <textarea placeholder="Add a moan... (Remember, no screaming)"></textarea>
+                            <button class="add-comment-btn" data-post-id="3">Moan</button>
+                        </div>
+                        
+                        <!-- Comments Container -->
+                        <div class="comments-container" id="comments-3">
+                            <!-- Comments will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- NEW POST 4 -->
+            <article class="post" data-post-id="4">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">932</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/HordeManagement</span>
+                        <span class="posted-by">Posted by u/HordeLeaderHank 3 days ago</span>
+                        <span class="flair">Leadership</span>
+                    </div>
+                    
+                    <h2 class="post-title">How do you deal with slackers in your horde?</h2>
+                    
+                    <div class="post-body">
+                        <p>I'm leading a horde of about 50 zombies and we've got a few who just won't pull their weight. There's one who "trips" every time we're about to corner survivors, another who moans WAY too loudly and gives away our position, and three who keep wandering off to look at shiny objects.</p>
+                        <p>I've tried threatening to eat their brains (jokingly, of course), assigning them to rear positions, and even separating them from the group temporarily. Nothing works! Any advice from fellow horde leaders?</p>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> <span class="comment-count">289</span> Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h3 class="comments-title"><i class="fas fa-comment-dots"></i> Moans (<span class="comment-count">289</span>)</h3>
+                        
+                        <!-- Comment Form -->
+                        <div class="comment-form">
+                            <textarea placeholder="Add a moan... (Remember, no screaming)"></textarea>
+                            <button class="add-comment-btn" data-post-id="4">Moan</button>
+                        </div>
+                        
+                        <!-- Comments Container -->
+                        <div class="comments-container" id="comments-4">
+                            <!-- Comments will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- NEW POST 5 -->
+            <article class="post" data-post-id="5">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">1.8k</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/ApocalypseMemes</span>
+                        <span class="posted-by">Posted by u/MemeZombie 3 hours ago</span>
+                        <span class="flair">Meme</span>
+                    </div>
+                    
+                    <h2 class="post-title">When you see a survivor but remember you can't run</h2>
+                    
+                    <div class="post-body">
+                        <p>Every. Single. Time.</p>
+                        
+                        <img src="https://images.unsplash.com/photo-1531259683007-016a7b628fc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Zombie reaching out" class="post-image">
+                        
+                        <p>Bonus: When they climb a fence and you have to go all the way around.</p>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> <span class="comment-count">721</span> Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h3 class="comments-title"><i class="fas fa-comment-dots"></i> Moans (<span class="comment-count">721</span>)</h3>
+                        
+                        <!-- Comment Form -->
+                        <div class="comment-form">
+                            <textarea placeholder="Add a moan... (Remember, no screaming)"></textarea>
+                            <button class="add-comment-btn" data-post-id="5">Moan</button>
+                        </div>
+                        
+                        <!-- Comments Container -->
+                        <div class="comments-container" id="comments-5">
+                            <!-- Comments will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-section">
+                <h4>DEADIT</h4>
+                <p>The premier online community for the reanimated. Connect with fellow zombies, share survival (well, unsurvival) tips, and find the best brain buffets in your area.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Help</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Deadit Rules</a></li>
+                    <li><a href="#">Content Policy</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Moderator Code of Conduct</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Related Communities</h4>
+                <ul class="footer-links">
+                    <li><a href="#">VampireVerse</a></li>
+                    <li><a href="#">GhoulGuru</a></li>
+                    <li><a href="#">SkeletonSpace</a></li>
+                    <li><a href="#">MummyMingle</a></li>
+                    <li><a href="#">The Afterlife Network</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="container copyright">
+            <p>Deadit &copy; 2023 - Present. All rights reserved. Or not, we're dead, what do we care?</p>
+            <p>This is a satirical project. No actual zombies were harmed in the making of this website.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Zombie usernames for generating comments
+        const zombieUsernames = [
+            "RottingRon", "ShamblingSally", "BrainBuffetBrian", "OneArmWilly", 
+            "DuctTapeDave", "LimblessLarry", "DecomposingDeb", "GroaningGreg",
+            "HordeLeaderHank", "MaggotMike", "FleshEaterFrank", "MoaningMartha",
+            "ZombieZach", "DecayDennis", "UndeadUrsula", "WalkerWanda"
+        ];
+
+        // Zombie flairs
+        const zombieFlairs = [
+            "Fresh Turn", "Seasoned Rotter", "Brain Connoisseur", "Missing Limb",
+            "Horde Leader", "Improvised Solutions", "Decomposition Expert",
+            "Slow Walker", "Fast Decomposer", "Loud Moaner"
+        ];
+
+        // Comment templates
+        const commentTemplates = [
+            "That happened to me too! I fixed it by {solution}.",
+            "Have you tried {solution}? Worked for my cousin.",
+            "This is why I stick to {alternative} instead.",
+            "Ugh, I hate when that happens. Last time it took me {time} to fix.",
+            "Pro tip: {advice}. Saved my afterlife.",
+            "Sounds like you need to {action}. Trust me on this.",
+            "My horde had the same issue. We solved it by {solution}.",
+            "That's nothing! Once I {extreme_example}.",
+            "Back in my day, we didn't have these problems. We just {old_school_solution}.",
+            "Have you checked if it's covered under the {apocalypse_warranty}?",
+            "I'd offer to help but my {body_part} fell off yesterday.",
+            "This is clearly a case of {zombie_problem}. You need {solution}.",
+            "My ex used to do that. That's why they're my ex now.",
+            "Just wait until {worse_problem} happens. Then you'll really be complaining.",
+            "I read about this on r/{subdeadit}. They said to try {solution}."
+        ];
+
+        // Function to get random element from array
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        // Function to generate random comment
+        function generateRandomComment() {
+            const template = getRandomElement(commentTemplates);
+            
+            // Fill in template variables
+            const solutions = ["using barbed wire", "cauterizing the wound", "chewing gum", "rusty nails", "old bicycle chains", "super glue", "stapling it back on"];
+            const alternatives = ["eating vegetables", "shambling slower", "avoiding survivors", "staying indoors", "moonlight grazing"];
+            const times = ["three days", "a week", "hours", "minutes", "what felt like an eternity"];
+            const advice = ["always carry spare parts", "keep your joints oiled", "avoid rainy weather", "don't chase fast survivors", "moan quietly"];
+            const actions = ["embrace the decay", "find a fresh body", "join a support horde", "stop worrying about it", "try meditation"];
+            const extremeExamples = ["lost both arms and still caught a survivor", "walked for miles with no head", "ate my own foot by accident", "got mistaken for a mannequin"];
+            const oldSchoolSolutions = ["dealt with it", "ate the problem", "moaned louder", "joined a different horde"];
+            const warranties = ["Apocalypse Basic", "Zombie Premium", "Brain-Eater Deluxe", "Rot Protection Plan"];
+            const bodyParts = ["arm", "leg", "foot", "hand", "nose", "ear", "jaw"];
+            const zombieProblems = ["advanced decomposition", "limb detachment syndrome", "brain fever", "slow shambling disorder", "moaning malfunction"];
+            const subdeadits = ["ZombieSurvival", "MoanHelpDesk", "UndeadDIY", "RottingAesthetics", "HordeManagement"];
+            
+            const comment = template
+                .replace("{solution}", getRandomElement(solutions))
+                .replace("{alternative}", getRandomElement(alternatives))
+                .replace("{time}", getRandomElement(times))
+                .replace("{advice}", getRandomElement(advice))
+                .replace("{action}", getRandomElement(actions))
+                .replace("{extreme_example}", getRandomElement(extremeExamples))
+                .replace("{old_school_solution}", getRandomElement(oldSchoolSolutions))
+                .replace("{apocalypse_warranty}", getRandomElement(warranties))
+                .replace("{body_part}", getRandomElement(bodyParts))
+                .replace("{zombie_problem}", getRandomElement(zombieProblems))
+                .replace("{solution}", getRandomElement(solutions))
+                .replace("{worse_problem}", getRandomElement(zombieProblems))
+                .replace("{subdeadit}", getRandomElement(subdeadits))
+                .replace("{solution}", getRandomElement(solutions));
+                
+            return comment;
+        }
+
+        // Function to add a new comment
+        function addComment(postId, commentText, parentElement = null, replyLevel = 1) {
+            const commentsContainer = parentElement || document.getElementById(`comments-${postId}`);
+            const commentCountElement = document.querySelector(`[data-post-id="${postId}"] .comment-count`);
+            
+            // Create new comment element
+            const commentDiv = document.createElement('div');
+            commentDiv.className = `comment${replyLevel > 1 ? ` reply-level-${replyLevel}` : ''}`;
+            
+            const username = getRandomElement(zombieUsernames);
+            const flair = Math.random() > 0.7 ? `<span class="flair">${getRandomElement(zombieFlairs)}</span>` : '';
+            
+            commentDiv.innerHTML = `
+                <div class="comment-meta">
+                    <span class="comment-author">u/${username}</span>
+                    <span>just now</span>
+                    ${flair}
+                </div>
+                <div class="comment-body">
+                    ${commentText}
+                </div>
+                <div class="comment-actions">
+                    <button class="comment-action upvote-comment"><i class="fas fa-arrow-up"></i> 1</button>
+                    <button class="comment-action reply-btn"><i class="fas fa-reply"></i> Reply</button>
+                </div>
+                <div class="reply-form">
+                    <textarea placeholder="Reply to u/${username}..."></textarea>
+                    <div class="reply-buttons">
+                        <button class="btn-secondary reply-submit">Reply</button>
+                        <button class="btn-secondary reply-cancel">Cancel</button>
+                    </div>
+                </div>
+            `;
+            
+            // Add to container
+            if (parentElement && parentElement.classList.contains('comment')) {
+                // Find or create replies container
+                let repliesContainer = parentElement.querySelector('.replies-container');
+                if (!repliesContainer) {
+                    repliesContainer = document.createElement('div');
+                    repliesContainer.className = 'replies-container';
+                    parentElement.appendChild(repliesContainer);
+                }
+                repliesContainer.appendChild(commentDiv);
+            } else {
+                commentsContainer.appendChild(commentDiv);
+            }
+            
+            // Update comment count
+            if (commentCountElement) {
+                const currentCount = parseInt(commentCountElement.textContent);
+                commentCountElement.textContent = currentCount + 1;
+                
+                // Update comments title count
+                const commentsTitle = document.querySelector(`[data-post-id="${postId}"] .comments-title .comment-count`);
+                if (commentsTitle) {
+                    commentsTitle.textContent = currentCount + 1;
+                }
+            }
+            
+            // Attach event listeners to new comment
+            attachCommentListeners(commentDiv, postId, replyLevel + 1);
+        }
+
+        // Function to attach event listeners to a comment
+        function attachCommentListeners(commentElement, postId, replyLevel) {
+            // Reply button
+            const replyBtn = commentElement.querySelector('.reply-btn');
+            const replyForm = commentElement.querySelector('.reply-form');
+            
+            replyBtn.addEventListener('click', function() {
+                replyForm.classList.toggle('active');
+                if (replyForm.classList.contains('active')) {
+                    replyForm.querySelector('textarea').focus();
+                }
+            });
+            
+            // Reply submit button
+            const replySubmit = commentElement.querySelector('.reply-submit');
+            replySubmit.addEventListener('click', function() {
+                const textarea = replyForm.querySelector('textarea');
+                const commentText = textarea.value.trim();
+                
+                if (commentText) {
+                    addComment(postId, commentText, commentElement, replyLevel);
+                    textarea.value = '';
+                    replyForm.classList.remove('active');
+                } else {
+                    alert("You can't post an empty moan!");
+                }
+            });
+            
+            // Reply cancel button
+            const replyCancel = commentElement.querySelector('.reply-cancel');
+            replyCancel.addEventListener('click', function() {
+                replyForm.querySelector('textarea').value = '';
+                replyForm.classList.remove('active');
+            });
+            
+            // Upvote button
+            const upvoteBtn = commentElement.querySelector('.upvote-comment');
+            upvoteBtn.addEventListener('click', function() {
+                const countElement = upvoteBtn.querySelector('i').nextSibling;
+                if (countElement) {
+                    const countText = countElement.textContent.trim();
+                    const currentCount = parseInt(countText) || 0;
+                    upvoteBtn.innerHTML = `<i class="fas fa-arrow-up"></i> ${currentCount + 1}`;
+                    
+                    // Change color to indicate voted
+                    upvoteBtn.style.color = 'var(--undead-green)';
+                }
+            });
+        }
+
+        // Function to populate new posts with initial comments
+        function populateNewPosts() {
+            // Post 3: Undead Relationships
+            const post3Comments = [
+                "This is a classic case of 'hunger confusion'. She probably just needs a snack. Try leaving a fresh brain somewhere nearby as a distraction.",
+                "RUN! I mean... shamble away quickly! My last zombie relationship ended with me missing a kidney.",
+                "Have you tried couples counseling? There's a great therapist in the old asylum who works for brains.",
+                "This is why I stick to casual horde-mancing. Less chance of getting eaten by your partner.",
+                "Maybe she's just being affectionate? Zombie love language is hard to interpret sometimes."
+            ];
+            
+            post3Comments.forEach(comment => {
+                setTimeout(() => {
+                    addComment(3, comment);
+                }, Math.random() * 1000);
+            });
+            
+            // Post 4: Horde Management
+            const post4Comments = [
+                "Put the shiny-object zombies at the front. They'll be so distracted they won't wander off as much.",
+                "I had a similar issue. Started a 'zombie of the month' program with bonus brains as incentive. Works wonders!",
+                "The loud moaner might have hearing issues. Try communicating with hand gestures instead.",
+                "Separate them into a 'special team' and give them meaningless tasks. They'll feel important and stay out of the way.",
+                "Eat the worst one as an example to the others. Harsh but effective."
+            ];
+            
+            post4Comments.forEach(comment => {
+                setTimeout(() => {
+                    addComment(4, comment);
+                }, Math.random() * 1000);
+            });
+            
+            // Post 5: Memes
+            const post5Comments = [
+                "This is too real! Especially when they have a car and you're like 'well, there goes my dinner'.",
+                "My favorite is when they climb a ladder and you just stand there looking up for hours.",
+                "Or when they swim across a river... like come on, play fair!",
+                "I once followed a survivor for THREE DAYS only for them to get on a helicopter. The disappointment was palpable.",
+                "This is why I prefer to ambush. Less walking, more eating."
+            ];
+            
+            post5Comments.forEach(comment => {
+                setTimeout(() => {
+                    addComment(5, comment);
+                }, Math.random() * 1000);
+            });
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attach listeners to existing comments
+            document.querySelectorAll('.comment').forEach(comment => {
+                const postElement = comment.closest('.post');
+                const postId = postElement ? postElement.getAttribute('data-post-id') : '1';
+                attachCommentListeners(comment, postId, 2);
+            });
+            
+            // Attach listeners to comment form buttons
+            document.querySelectorAll('.add-comment-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const postId = this.getAttribute('data-post-id');
+                    const textarea = this.parentElement.querySelector('textarea');
+                    const commentText = textarea.value.trim();
+                    
+                    if (commentText) {
+                        addComment(postId, commentText);
+                        textarea.value = '';
+                    } else {
+                        alert("You can't post an empty moan!");
+                    }
+                });
+            });
+            
+            // Allow Enter key to submit comments
+            document.querySelectorAll('.comment-form textarea').forEach(textarea => {
+                textarea.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
+                        const postId = this.parentElement.querySelector('.add-comment-btn').getAttribute('data-post-id');
+                        const commentText = this.value.trim();
+                        
+                        if (commentText) {
+                            addComment(postId, commentText);
+                            this.value = '';
+                        }
+                    }
+                });
+            });
+            
+            // New Post button
+            document.getElementById('newPostBtn').addEventListener('click', function() {
+                alert("Create a New Moan\n\nSubdeadit: r/\nTitle: \n\nContent: \n\n(Note: This demo doesn't actually create persistent posts)");
+            });
+            
+            // Populate new posts with comments
+            populateNewPosts();
+            
+            // Add voting functionality to posts
+            document.querySelectorAll('.vote-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const post = this.closest('.post');
+                    const voteCount = post.querySelector('.vote-count');
+                    let currentCount = parseInt(voteCount.textContent);
+                    
+                    if (this.classList.contains('upvote')) {
+                        // Remove downvote active state if present
+                        const downvoteBtn = post.querySelector('.downvote');
+                        if (downvoteBtn.style.color === 'var(--blood-red)') {
+                            downvoteBtn.style.color = '';
+                            currentCount++;
+                        }
+                        
+                        // Toggle upvote
+                        if (this.style.color === 'var(--undead-green)') {
+                            this.style.color = '';
+                            voteCount.textContent = currentCount - 1;
+                        } else {
+                            this.style.color = 'var(--undead-green)';
+                            voteCount.textContent = currentCount + 1;
+                        }
+                    } else if (this.classList.contains('downvote')) {
+                        // Remove upvote active state if present
+                        const upvoteBtn = post.querySelector('.upvote');
+                        if (upvoteBtn.style.color === 'var(--undead-green)') {
+                            upvoteBtn.style.color = '';
+                            currentCount--;
+                        }
+                        
+                        // Toggle downvote
+                        if (this.style.color === 'var(--blood-red)') {
+                            this.style.color = '';
+                            voteCount.textContent = currentCount + 1;
+                        } else {
+                            this.style.color = 'var(--blood-red)';
+                            voteCount.textContent = currentCount - 1;
+                        }
+                    }
+                });
+            });
+            
+            // Add auto-generated comments over time for realism
+            setInterval(() => {
+                // Randomly add a comment to a random post
+                if (Math.random() > 0.7) {
+                    const postIds = ['1', '2', '3', '4', '5'];
+                    const randomPostId = getRandomElement(postIds);
+                    const randomComment = generateRandomComment();
+                    
+                    // Sometimes add as reply to existing comment
+                    if (Math.random() > 0.5) {
+                        const postComments = document.querySelectorAll(`#comments-${randomPostId} .comment`);
+                        if (postComments.length > 0) {
+                            const randomCommentElement = getRandomElement(Array.from(postComments));
+                            addComment(randomPostId, randomComment, randomCommentElement, 2);
+                        }
+                    } else {
+                        addComment(randomPostId, randomComment);
+                    }
+                }
+            }, 30000); // Every 30 seconds
+        });
+    </script>
+</body>
+</html>

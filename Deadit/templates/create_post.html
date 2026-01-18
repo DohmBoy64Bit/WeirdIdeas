@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 800px;">
+    <h2 class="auth-title">Create a New Moan</h2>
+    <form method="POST" class="auth-form">
+        <label style="color: var(--undead-green); font-weight: bold;">Subdeadit</label>
+        <select name="subdeadit"
+            style="width: 100%; padding: 10px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; border-radius: 5px;">
+            {% for sub in ["r/BrainsGoneWild", "r/FreshMeat", "r/MoanHelpDesk", "r/ZombieSurvival", "r/ShambleSports",
+            "r/AskRottingOnes", "r/ApocalypseMemes", "r/UndeadRelationships", "r/RottingAesthetics",
+            "r/HordeManagement"] %}
+            <option value="{{ sub }}" {% if prefilled_subdeadit==sub or prefilled_subdeadit==sub.replace('r/', '' )
+                %}selected{% endif %}>{{ sub }}</option>
+            {% endfor %}
+        </select>
+
+        <label style="color: var(--undead-green); font-weight: bold;">Title</label>
+        <input type="text" name="title" placeholder="What's rotting your brain today?" required>
+
+        <label style="color: var(--undead-green); font-weight: bold;">Body</label>
+        <textarea name="body" rows="6" placeholder="Spill your guts..."
+            style="width: 100%; padding: 10px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; border-radius: 5px;"
+            required></textarea>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">
+            Post Moan
+        </button>
+    </form>
+</div>
+{% endblock %}

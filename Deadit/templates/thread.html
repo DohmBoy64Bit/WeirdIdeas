@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main-content-flex">
+    <!-- Sidebar (Reused structure - ideally a partial, but repeating for now per current limitations) -->
+    <aside class="sidebar">
+        <h3><i class="fas fa-brain"></i> Trending Subdeadits</h3>
+        <ul class="subdeadit-list">
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='BrainsGoneWild') }}">r/BrainsGoneWild</a>
+                <span class="subscribers">2.3M shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='FreshMeat') }}">r/FreshMeat</a>
+                <span class="subscribers">1.8M shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='MoanHelpDesk') }}">r/MoanHelpDesk</a>
+                <span class="subscribers">950K shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='ZombieSurvival') }}">r/ZombieSurvival</a>
+                <span class="subscribers">745K shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='ShambleSports') }}">r/ShambleSports</a>
+                <span class="subscribers">620K shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='AskRottingOnes') }}">r/AskRottingOnes</a>
+                <span class="subscribers">540K shamblers</span>
+            </li>
+            <li>
+                <a href="{{ url_for('main.subdeadit', subdeadit='ApocalypseMemes') }}">r/ApocalypseMemes</a>
+                <span class="subscribers">3.1M shamblers</span>
+            </li>
+        </ul>
+
+        <div class="rules">
+            <h3><i class="fas fa-book-dead"></i> Community Rules</h3>
+            <ol class="rules-list">
+                <li>No discrimination based on decomposition level</li>
+                <li>Keep moans to a reasonable volume</li>
+                <li>No sharing survivor bunker locations</li>
+                <li>Tag NSFB (Not Safe For Brains) appropriately</li>
+                <li>Respect the newly turned</li>
+                <li>No false "cure" claims</li>
+            </ol>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary" style="width: 100%; text-align: center;">
+                <i class="fas fa-arrow-left"></i> Back to Feed
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Thread Content -->
+    <div class="posts-container">
+        <!-- The Post -->
+        <article class="post">
+            <!-- Voting Section -->
+            <div class="vote-section" data-item-type="post" data-item-id="{{ post.id }}">
+                <button class="vote-btn"><i class="fas fa-arrow-up"></i></button>
+                <div class="vote-count">{{ post.upvotes }}</div>
+                <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+            </div>
+
+            <!-- Post Content -->
+            <div class="post-content">
+                <div class="post-meta">
+                    <a href="{{ url_for('main.subdeadit', subdeadit=post.subdeadit.replace('r/', '')) }}"
+                        class="subdeadit">{{ post.subdeadit }}</a> •
+                    <span class="posted-by">Posted by u/{{ post.author.username }} • {{
+                        post.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    {% if post.flair %}
+                    <span class="flair"
+                        style="background: var(--rotten-brown); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">{{
+                        post.flair }}</span>
+                    {% endif %}
+                </div>
+
+                <h1 class="post-title" style="margin-top: 5px;">{{ post.title }}</h1>
+
+                <div class="post-body">
+                    {{ post.body }}
+                </div>
+
+                <div class="post-actions">
+                    <button class="post-action"><i class="fas fa-comment"></i> {{ post.comments.count() }}
+                        Moans</button>
+                    <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                    <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                </div>
+            </div>
+        </article>
+
+        <!-- New Moan (Comment) Form -->
+        {% if current_user.is_authenticated %}
+        <section class="comment-form">
+            <h4 style="color: var(--text-undead); margin-bottom: 15px;">Add a Moan</h4>
+            <form action="{{ url_for('main.add_comment', post_id=post.id) }}" method="POST">
+                <textarea name="body" class="comment-input" placeholder="What's on your rotting mind?"
+                    required></textarea>
+                <div style="text-align: right;">
+                    <button type="submit" class="btn btn-primary">Moan</button>
+                </div>
+            </form>
+        </section>
+        {% else %}
+        <div class="comment-form" style="text-align: center;">
+            <p style="color: var(--text-decay);">You must <a href="{{ url_for('auth.login') }}">login</a> to moan.</p>
+        </div>
+        {% endif %}
+
+        <!-- Comments Section -->
+        <div class="comments-section" style="margin-top: 30px;">
+            <h3 style="color: var(--undead-green); margin-bottom: 20px;">
+                <i class="fas fa-comments"></i> Moans ({{ post.comments.count() }})
+            </h3>
+
+            {% for comment in post.comments %}
+            {% if not comment.parent_id %}
+            <div class="comment"
+                style="background: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444;">
+                <div class="comment-meta" style="color: var(--text-decay); font-size: 0.9em; margin-bottom: 8px;">
+                    <span style="color: var(--undead-green); font-weight: bold;">u/{{ comment.author.username }}</span>
+                    •
+                    {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    {% if comment.flair %}
+                    <span
+                        style="border: 1px solid var(--rotten-brown); padding: 0 4px; border-radius: 3px; font-size: 0.8em;">{{
+                        comment.flair }}</span>
+                    {% endif %}
+                </div>
+                <div class="comment-body" style="color: var(--text-undead);">{{ comment.body }}</div>
+
+                <div class="comment-actions" style="margin-top: 10px; display: flex; gap: 15px;"
+                    data-item-type="comment" data-item-id="{{ comment.id }}">
+                    <button class="post-action" style="font-size: 0.9em;"><i class="fas fa-arrow-up"></i> <span
+                            class="vote-count">{{
+                            comment.upvotes }}</span></button>
+                    <button class="post-action" style="font-size: 0.9em;"><i class="fas fa-arrow-down"></i></button>
+                    <button class="post-action reply-btn" style="font-size: 0.9em;"><i class="fas fa-comment"></i>
+                        Reply</button>
+                </div>
+
+                <!-- Hidden Reply Form -->
+                <div class="reply-form" id="reply-{{ comment.id }}" style="display: none; margin-top: 15px;">
+                    <form action="{{ url_for('main.add_comment', post_id=post.id) }}" method="POST">
+                        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                        <textarea name="body" class="comment-input" style="min-height: 80px;"
+                            placeholder="Moan your reply..." required></textarea>
+                        <div style="text-align: right;">
+                            <button type="button" class="post-action cancel-reply"
+                                style="margin-right: 10px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary"
+                                style="padding: 4px 12px; font-size: 0.8rem;">Moan</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Nested Replies (Level 1) -->
+                {% if comment.replies.count() > 0 %}
+                <div class="replies"
+                    style="margin-left: 20px; margin-top: 15px; border-left: 2px solid #555; padding-left: 15px;">
+                    {% for reply in comment.replies %}
+                    <div class="comment"
+                        style="background: #3a3a3a; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                        <div class="comment-meta" style="color: var(--text-decay); font-size: 0.9em;">
+                            <span style="color: var(--undead-green); font-weight: bold;">u/{{ reply.author.username
+                                }}</span>
+                        </div>
+                        <div class="comment-body" style="color: var(--text-undead);">{{ reply.body }}</div>
+                        <div class="comment-actions" style="margin-top: 10px; display: flex; gap: 15px;"
+                            data-item-type="comment" data-item-id="{{ reply.id }}">
+                            <button class="post-action" style="font-size: 0.8em;"><i class="fas fa-arrow-up"></i> <span
+                                    class="vote-count">{{
+                                    reply.upvotes }}</span></button>
+                            <button class="post-action" style="font-size: 0.8em;"><i
+                                    class="fas fa-arrow-down"></i></button>
+                            <button class="post-action reply-btn" style="font-size: 0.8em;"><i
+                                    class="fas fa-comment"></i>
+                                Reply</button>
+                        </div>
+
+                        <!-- Hidden Reply Form for Nested -->
+                        <div class="reply-form" id="reply-{{ reply.id }}" style="display: none; margin-top: 10px;">
+                            <form action="{{ url_for('main.add_comment', post_id=post.id) }}" method="POST">
+                                <input type="hidden" name="parent_id" value="{{ reply.id }}">
+                                <textarea name="body" class="comment-input" style="min-height: 60px; font-size: 0.9rem;"
+                                    placeholder="Moan your reply..." required></textarea>
+                                <div style="text-align: right;">
+                                    <button type="button" class="post-action cancel-reply"
+                                        style="font-size: 0.8rem; margin-right: 10px;">Cancel</button>
+                                    <button type="submit" class="btn btn-primary"
+                                        style="padding: 2px 10px; font-size: 0.75rem;">Moan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

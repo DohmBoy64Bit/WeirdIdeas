@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadit - For the Undead Community</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --undead-green: #3a7d34;
+            --rotten-brown: #5d4037;
+            --blood-red: #c62828;
+            --brain-gray: #757575;
+            --apoc-bg: #1a1a1a;
+            --post-bg: #2d2d2d;
+            --text-undead: #e0e0e0;
+            --text-decay: #b0b0b0;
+        }
+
+        body {
+            background-color: var(--apoc-bg);
+            color: var(--text-undead);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(58, 125, 52, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(197, 40, 40, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: rgba(26, 26, 26, 0.95);
+            border-bottom: 2px solid var(--blood-red);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            color: var(--undead-green);
+            font-size: 2.5rem;
+        }
+
+        .logo-text {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--blood-red);
+            text-shadow: 2px 2px 0 #000;
+            letter-spacing: 1px;
+        }
+
+        .logo-tagline {
+            font-size: 0.9rem;
+            color: var(--text-decay);
+            font-style: italic;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: #333;
+            border-radius: 20px;
+            padding: 8px 15px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: var(--text-undead);
+            width: 100%;
+            padding: 5px;
+            outline: none;
+        }
+
+        .search-bar i {
+            color: var(--brain-gray);
+            margin-right: 8px;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--undead-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2d6a28;
+        }
+
+        .btn-secondary {
+            background-color: var(--rotten-brown);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a3329;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 25%;
+            background-color: var(--post-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid var(--blood-red);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            color: var(--undead-green);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subdeadit-list {
+            list-style: none;
+        }
+
+        .subdeadit-list li {
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--brain-gray);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .subdeadit-list li a {
+            color: var(--text-undead);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .subdeadit-list li a:hover {
+            color: var(--undead-green);
+        }
+
+        .subscribers {
+            color: var(--text-decay);
+            font-size: 0.8rem;
+        }
+
+        .rules {
+            margin-top: 25px;
+        }
+
+        .rules-list {
+            padding-left: 20px;
+            color: var(--text-decay);
+        }
+
+        .rules-list li {
+            margin-bottom: 8px;
+        }
+
+        /* Posts */
+        .posts-container {
+            width: 75%;
+        }
+
+        .post {
+            background-color: var(--post-bg);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            border: 1px solid #444;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--undead-green);
+        }
+
+        .vote-section {
+            width: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-right: 15px;
+        }
+
+        .vote-btn {
+            background: none;
+            border: none;
+            color: var(--brain-gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .vote-btn:hover {
+            color: var(--undead-green);
+        }
+
+        .downvote:hover {
+            color: var(--blood-red);
+        }
+
+        .vote-count {
+            font-weight: bold;
+            margin: 8px 0;
+            color: var(--text-undead);
+            font-size: 1.2rem;
+        }
+
+        .post-content {
+            flex: 1;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-decay);
+            font-size: 0.9rem;
+        }
+
+        .subdeadit {
+            color: var(--undead-green);
+            font-weight: bold;
+        }
+
+        .posted-by {
+            color: var(--text-decay);
+        }
+
+        .post-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .post-body {
+            color: var(--text-undead);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .post-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-decay);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .post-action:hover {
+            color: var(--undead-green);
+        }
+
+        .post-image {
+            width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        /* Footer */
+        footer {
+            background-color: rgba(26, 26, 26, 0.95);
+            border-top: 2px solid var(--rotten-brown);
+            margin-top: 40px;
+            padding: 30px 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .footer-section {
+            width: 30%;
+            margin-bottom: 20px;
+        }
+
+        .footer-section h4 {
+            color: var(--undead-green);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            color: var(--text-decay);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--undead-green);
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--brain-gray);
+            font-size: 0.9rem;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar, .posts-container {
+                width: 100%;
+            }
+            
+            .footer-section {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .logo-text {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Decorative elements */
+        .blood-splatter {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .splatter-1 {
+            top: 10%;
+            left: 5%;
+            transform: rotate(45deg);
+            color: var(--blood-red);
+        }
+
+        .splatter-2 {
+            bottom: 10%;
+            right: 5%;
+            transform: rotate(-20deg);
+            color: var(--blood-red);
+        }
+
+        .zombie-icon {
+            color: var(--undead-green);
+        }
+
+        .flair {
+            display: inline-block;
+            background-color: var(--rotten-brown);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative blood splatters -->
+    <div class="blood-splatter splatter-1">
+        <i class="fas fa-tint" style="font-size: 300px;"></i>
+    </div>
+    <div class="blood-splatter splatter-2">
+        <i class="fas fa-tint" style="font-size: 250px;"></i>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-skull-crossbones logo-icon"></i>
+                <div>
+                    <h1 class="logo-text">DEADIT</h1>
+                    <p class="logo-tagline">The social network for the recently deceased</p>
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search for brains...">
+            </div>
+            
+            <div class="user-actions">
+                <button class="btn btn-secondary">
+                    <i class="fas fa-user"></i> Undead Profile
+                </button>
+                <button class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Moan
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h3><i class="fas fa-brain"></i> Trending Subdeadits</h3>
+            <ul class="subdeadit-list">
+                <li>
+                    <a href="#">r/BrainsGoneWild</a>
+                    <span class="subscribers">2.3M shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/FreshMeat</a>
+                    <span class="subscribers">1.8M shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/MoanHelpDesk</a>
+                    <span class="subscribers">950K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/ZombieSurvival</a>
+                    <span class="subscribers">745K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/ShambleSports</a>
+                    <span class="subscribers">620K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/AskRottingOnes</a>
+                    <span class="subscribers">540K shamblers</span>
+                </li>
+                <li>
+                    <a href="#">r/ApocalypseMemes</a>
+                    <span class="subscribers">3.1M shamblers</span>
+                </li>
+            </ul>
+            
+            <div class="rules">
+                <h3><i class="fas fa-book-dead"></i> Community Rules</h3>
+                <ol class="rules-list">
+                    <li>No discrimination based on decomposition level</li>
+                    <li>Keep moans to a reasonable volume</li>
+                    <li>No sharing survivor bunker locations</li>
+                    <li>Tag NSFB (Not Safe For Brains) appropriately</li>
+                    <li>Respect the newly turned</li>
+                    <li>No false "cure" claims</li>
+                </ol>
+            </div>
+        </aside>
+
+        <!-- Posts Container -->
+        <main class="posts-container">
+            <!-- Post 1 -->
+            <article class="post">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">1.2k</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/BrainsGoneWild</span>
+                        <span class="posted-by">Posted by u/RottingRon 8 hours ago</span>
+                        <span class="flair">Fresh Catch</span>
+                    </div>
+                    
+                    <h2 class="post-title">Just found a survivor camp with 20+ untouched brains. Best day since the turn!</h2>
+                    
+                    <div class="post-body">
+                        <p>I was shambling through the old mall when I caught the scent. Followed it to a hidden bunker in the food court. They had reinforced doors but we just waited them out. After three days, they had to come out for supplies. Let's just say it was an all-you-can-eat buffet!</p>
+                        <p>Anyone else having luck with mall locations? Seems like survivors think we can't navigate through Claire's.</p>
+                        
+                        <img src="https://images.unsplash.com/photo-1533090161767-e6ffed986c88?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Abandoned mall" class="post-image">
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> 427 Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Post 2 -->
+            <article class="post">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">847</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/MoanHelpDesk</span>
+                        <span class="posted-by">Posted by u/NewlyBitten 1 day ago</span>
+                        <span class="flair">Help Needed</span>
+                    </div>
+                    
+                    <h2 class="post-title">How do I stop my left arm from falling off? It's really affecting my shambling.</h2>
+                    
+                    <div class="post-body">
+                        <p>Got turned about a week ago and my decomposition is progressing faster than expected. My left arm keeps detaching at the shoulder, especially when I'm chasing survivors. I've tried duct tape, rusty wire, and even chewing gum but nothing holds for more than a few hours.</p>
+                        <p>Any long-term solutions? Should I just embrace the one-armed lifestyle? My coordination is already terrible enough with two arms.</p>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> 203 Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Post 3 -->
+            <article class="post">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">2.4k</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/ApocalypseMemes</span>
+                        <span class="posted-by">Posted by u/MemeZombie 3 hours ago</span>
+                        <span class="flair">Meme</span>
+                    </div>
+                    
+                    <h2 class="post-title">When you see a survivor but remember you can't run</h2>
+                    
+                    <div class="post-body">
+                        <p>Every. Single. Time.</p>
+                        
+                        <img src="https://images.unsplash.com/photo-1531259683007-016a7b628fc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Zombie reaching out" class="post-image">
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> 512 Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Post 4 -->
+            <article class="post">
+                <div class="vote-section">
+                    <button class="vote-btn upvote"><i class="fas fa-arrow-up"></i></button>
+                    <div class="vote-count">673</div>
+                    <button class="vote-btn downvote"><i class="fas fa-arrow-down"></i></button>
+                </div>
+                
+                <div class="post-content">
+                    <div class="post-meta">
+                        <span class="subdeadit">r/AskRottingOnes</span>
+                        <span class="posted-by">Posted by u/CuriousCorpse 2 days ago</span>
+                        <span class="flair">Question</span>
+                    </div>
+                    
+                    <h2 class="post-title">Serious question: Do any of you miss being alive?</h2>
+                    
+                    <div class="post-body">
+                        <p>I've been undead for about 6 months now. The brain cravings are intense, the shambling gets tedious, and my social life has definitely taken a hit. But honestly? No taxes, no Monday meetings, no worrying about retirement funds.</p>
+                        <p>Sure, I miss my family sometimes, but they were probably eaten months ago. And I don't have to worry about climate change anymore!</p>
+                        <p>Anyone else finding the zombie apocalypse to be a bit of an upgrade in some ways?</p>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="post-action"><i class="fas fa-comment"></i> 891 Moans</button>
+                        <button class="post-action"><i class="fas fa-share"></i> Share</button>
+                        <button class="post-action"><i class="fas fa-bookmark"></i> Save</button>
+                        <button class="post-action"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-section">
+                <h4>DEADIT</h4>
+                <p>The premier online community for the reanimated. Connect with fellow zombies, share survival (well, unsurvival) tips, and find the best brain buffets in your area.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Help</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Deadit Rules</a></li>
+                    <li><a href="#">Content Policy</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Moderator Code of Conduct</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Related Communities</h4>
+                <ul class="footer-links">
+                    <li><a href="#">VampireVerse</a></li>
+                    <li><a href="#">GhoulGuru</a></li>
+                    <li><a href="#">SkeletonSpace</a></li>
+                    <li><a href="#">MummyMingle</a></li>
+                    <li><a href="#">The Afterlife Network</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="container copyright">
+            <p>Deadit &copy; 2023 - Present. All rights reserved. Or not, we're dead, what do we care?</p>
+            <p>This is a satirical project. No actual zombies were harmed in the making of this website.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Simple vote functionality
+        document.querySelectorAll('.vote-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const post = this.closest('.post');
+                const voteCount = post.querySelector('.vote-count');
+                let currentCount = parseInt(voteCount.textContent);
+                
+                if (this.classList.contains('upvote')) {
+                    // Remove downvote active state if present
+                    const downvoteBtn = post.querySelector('.downvote');
+                    if (downvoteBtn.style.color === 'var(--blood-red)') {
+                        downvoteBtn.style.color = '';
+                        currentCount++;
+                    }
+                    
+                    // Toggle upvote
+                    if (this.style.color === 'var(--undead-green)') {
+                        this.style.color = '';
+                        voteCount.textContent = currentCount - 1;
+                    } else {
+                        this.style.color = 'var(--undead-green)';
+                        voteCount.textContent = currentCount + 1;
+                    }
+                } else if (this.classList.contains('downvote')) {
+                    // Remove upvote active state if present
+                    const upvoteBtn = post.querySelector('.upvote');
+                    if (upvoteBtn.style.color === 'var(--undead-green)') {
+                        upvoteBtn.style.color = '';
+                        currentCount--;
+                    }
+                    
+                    // Toggle downvote
+                    if (this.style.color === 'var(--blood-red)') {
+                        this.style.color = '';
+                        voteCount.textContent = currentCount + 1;
+                    } else {
+                        this.style.color = 'var(--blood-red)';
+                        voteCount.textContent = currentCount - 1;
+                    }
+                }
+            });
+        });
+
+        // Post action buttons
+        document.querySelectorAll('.post-action').forEach(button => {
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                
+                // Toggle bookmark
+                if (icon.classList.contains('fa-bookmark')) {
+                    if (icon.classList.contains('fas')) {
+                        icon.classList.replace('fas', 'far');
+                        this.style.color = 'var(--undead-green)';
+                    } else {
+                        icon.classList.replace('far', 'fas');
+                        this.style.color = '';
+                    }
+                }
+                
+                // For comments, simulate opening comment section
+                if (icon.classList.contains('fa-comment')) {
+                    const countText = this.textContent;
+                    const count = parseInt(countText.match(/\d+/)[0]);
+                    this.textContent = countText.replace(/\d+/, count + 1);
+                    this.style.color = 'var(--undead-green)';
+                    
+                    // Reset after 2 seconds
+                    setTimeout(() => {
+                        this.style.color = '';
+                    }, 2000);
+                }
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-bar input');
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                alert(`Searching Deadit for: "${this.value}"\n(Note: This is a demo site, so no actual search will be performed.)`);
+                this.value = '';
+            }
+        });
+
+        // New Post button
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            alert("Create a New Moan (Post)\n\nSubdeadit: r/\nTitle: \n\nContent: \n\n(Note: This is a demo site, so no actual post will be created.)");
+        });
+    </script>
+</body>
+</html>

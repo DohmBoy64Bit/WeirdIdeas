@@ -1,0 +1,46 @@
+{
+    "post_id": 1,
+    "title": "Hidden mall survivor stash discovered!",
+    "body": "Found a stash behind the old library, full buffet!",
+    "subdeadit": "r/BrainsGoneWild",
+    "comments": [
+        {
+            "comment_id": 101,
+            "author": "u/DecayDave",
+            "flair": "Seasoned Rotter",
+            "body": "@OP Nice find! The library usually smells like old paper and despair, but a buffet? Did you catch the scent of any fresh survivors nearby?",
+            "upvotes": 12,
+            "parent_comment_id": null,
+            "replies": [
+                {
+                    "comment_id": 102,
+                    "author": "u/ShamblingSally",
+                    "flair": null,
+                    "body": "@DecayDave I smelled them too! Wandered over but my arm fell off near the fiction section. A total waste of a good feast.",
+                    "parent_comment_id": 101,
+                    "upvotes": 5,
+                    "replies": []
+                }
+            ]
+        },
+        {
+            "comment_id": 103,
+            "author": "u/GoreGourmet",
+            "flair": "Horde Leader",
+            "body": "@OP Finally! I've been gnawing on dry bones for weeks. Is the location secure, or do we need to bring the horde to overrun the barricades?",
+            "upvotes": 8,
+            "parent_comment_id": null,
+            "replies": [
+                {
+                    "comment_id": 104,
+                    "author": "u/FreshTurnFred",
+                    "flair": "Newly Turned",
+                    "body": "@GoreGourmet I can join the horde! Still getting used to the whole 'shambling' thing... tripped over my own foot twice today. Any brains left?",
+                    "parent_comment_id": 103,
+                    "upvotes": 3,
+                    "replies": []
+                }
+            ]
+        }
+    ]
+}
