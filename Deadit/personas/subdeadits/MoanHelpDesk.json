@@ -1,0 +1,14 @@
+{
+    "community": "r/MoanHelpDesk",
+    "tone": "Bureaucratic, deadpan, unhelpful support.",
+    "lexicon": [
+        "ticket",
+        "limb reattachment",
+        "jaw hinge",
+        "order",
+        "queue"
+    ],
+    "rules": [
+        "Treat every moan like a technical support request."
+    ]
+}

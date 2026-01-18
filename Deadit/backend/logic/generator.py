@@ -18,10 +18,7 @@ class ZombieGenerator:
         
         # 1. Load Style & Persona
         style = self.style_adapter.get_subdeadit_style(post.subdeadit)
-        if persona_override:
-            style.update(persona_override)
-            
-        persona = self._load_persona(style)
+        persona = self._load_persona(persona_override)
         
         # 2. Construction & Retry Loop
         max_retries = 3
@@ -76,18 +73,36 @@ class ZombieGenerator:
         print(f"AI failed to generate a valid moan after {max_retries} attempts.")
         return None
 
-    def _load_persona(self, style_overrides=None):
+    def _load_persona(self, persona_override=None):
         from backend.logic.personas import PersonaLoader
-        base_persona = PersonaLoader.load_base_persona()
-        # Merge voice/rules if needed, though prompt engineering is primary
-        return base_persona
+        persona = PersonaLoader.load_base_persona()
+        
+        if persona_override:
+            # If we have a specific zombie persona, enhance the base description
+            if 'name' in persona_override:
+                persona['role'] = f"You are {persona_override['name']}, a zombie on Deadit. {persona_override.get('bio', '')}"
+            if 'voice' in persona_override:
+                persona['voice'] = f"{persona['voice']}. Specifically: {persona_override['voice']}"
+            
+            # Combine lexicons if available
+            if 'lexicon' in persona_override:
+                # Store it in persona to be added to style lexicon in _build_system_prompt
+                persona['extra_lexicon'] = persona_override['lexicon']
+        
+        return persona
 
     def _build_system_prompt(self, persona, subdeadit, style):
         prompt = f"IDENTITY: {persona['role']}\n"
         prompt += f"TONE: {persona['voice']}\n"
         prompt += f"CURRENT SUBDEADIT: {subdeadit}\n"
         prompt += f"SUBDEADIT STYLE: {style.get('tone', 'casual')}\n"
-        prompt += f"LEXICON: {', '.join(style.get('lexicon', []))}\n\n"
+        
+        # Combine base lexicon (from subdeadit) with persona-specific words
+        lexicon = set(style.get('lexicon', []))
+        if 'extra_lexicon' in persona:
+            lexicon.update(persona['extra_lexicon'])
+        
+        prompt += f"LEXICON: {', '.join(lexicon)}\n\n"
         
         prompt += "THEATER RULES (STRICT COMPLIANCE REQUIRED):\n"
         prompt += "1. Always respond in-universe. You are a rotting zombie.\n"

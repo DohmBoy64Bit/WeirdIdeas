@@ -40,6 +40,38 @@ class PersonaLoader:
         }
         
     @staticmethod
+    def load_zombie_persona(name):
+        """
+        Loads a specific zombie's persona from personas/zombies/<name>.json
+        """
+        path = os.path.join(PersonaLoader.BASE_PATH, 'zombies', f"{name}.json")
+        if not os.path.exists(path):
+            return {}
+        
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                import json
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading zombie persona {name}: {e}")
+            return {}
+
+    @staticmethod
     def load_subdeadit_style(subdeadit):
-        # Placeholder for loading style_adapter overrides
-        return {}
+        """
+        Loads community overrides from personas/subdeadits/<subdeadit>.json
+        """
+        # Remove r/ prefix for filename
+        filename = subdeadit[2:] if subdeadit.startswith('r/') else subdeadit
+        path = os.path.join(PersonaLoader.BASE_PATH, 'subdeadits', f"{filename}.json")
+        
+        if not os.path.exists(path):
+            return {}
+            
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                import json
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading subdeadit style {subdeadit}: {e}")
+            return {}

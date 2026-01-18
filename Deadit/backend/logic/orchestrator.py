@@ -41,28 +41,36 @@ class Orchestrator:
                 print(f"Skipping AI moan: Max depth {depth} reached.")
                 return
 
-            comment_data = self.generator.generate_comment(post, parent_comment=parent_comment, depth=depth)
+            # --- NEW: Pick identity and load persona BEFORE generation ---
+            zombie_name, zombie_user = self._get_or_create_zombie(post_id)
+            
+            from backend.logic.personas import PersonaLoader
+            persona_override = PersonaLoader.load_zombie_persona(zombie_name)
+            
+            comment_data = self.generator.generate_comment(
+                post, 
+                parent_comment=parent_comment, 
+                depth=depth,
+                persona_override=persona_override
+            )
             
             if comment_data:
-                self._save_ai_comment(post.id, parent_comment_id, comment_data)
+                self._save_ai_comment(post.id, parent_comment_id, comment_data, zombie_user)
                 
         except Exception as e:
             print(f"Orchestration Error: {e}")
 
-    def _save_ai_comment(self, post_id, parent_comment_id, comment_data):
-        # Find or create a Zombie user
+    def _get_or_create_zombie(self, post_id):
         zombie_names = [
             "RottingRon", "ShamblingSally", "BrainBuffetBrian", "DecayDave", 
             "GoryGarry", "PutridPatty", "LimpingLarry", "ZombieZelda",
             "NecroticNed", "FleshieFelicia", "StumpySteve", "MaggotMandy"
         ]
         
-        # Avoid duplicates in the same thread if possible
         post = Post.query.get(post_id)
         existing_authors = {c.author.username for c in post.comments}
         available_names = [n for n in zombie_names if n not in existing_authors]
         
-        # If we ran out of unique names, just pick from the full list
         zombie_name = random.choice(available_names if available_names else zombie_names)
         zombie_user = User.query.filter_by(username=zombie_name).first()
         
@@ -71,7 +79,10 @@ class Orchestrator:
             zombie_user.set_password("brains")
             db.session.add(zombie_user)
             db.session.commit()
-        
+            
+        return zombie_name, zombie_user
+
+    def _save_ai_comment(self, post_id, parent_comment_id, comment_data, zombie_user):
         # Create the comment
         comment = Comment(
             body=comment_data.get('body', 'Ungh... brains...'),
