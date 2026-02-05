@@ -14,5 +14,10 @@ class Config:
     
     # Automation Settings
     # Seconds between "Deadit Life Cycle" checks (default: 5 minutes)
+    # Seconds between "Deadit Life Cycle" checks (default: 5 minutes)
     RUMBLE_INTERVAL = int(os.environ.get('RUMBLE_INTERVAL', 300))
+    # Chance to create a NEW thread (0.0 to 1.0)
+    RUMBLE_NEW_THREAD_CHANCE = float(os.environ.get('RUMBLE_NEW_THREAD_CHANCE', 0.10))
+    # Chance to REPLY to an existing thread (0.0 to 1.0)
+    RUMBLE_REPLY_CHANCE = float(os.environ.get('RUMBLE_REPLY_CHANCE', 0.40))
     SCHEDULER_API_ENABLED = True

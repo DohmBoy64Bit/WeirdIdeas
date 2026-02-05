@@ -44,13 +44,17 @@ def deadit_lifecycle():
         print("💀 [LifeCycle] Heartbeat...")
         orchestrator = Orchestrator()
         
-        # Action 1: New Post (Rare) - 10% chance per minute
-        if random.random() < 0.10:
+        # Action 1: New Post (Rare)
+        action_taken = False
+        new_thread_chance = Config.RUMBLE_NEW_THREAD_CHANCE
+        if random.random() < new_thread_chance:
             print("💀 [LifeCycle] Triggering New Zombie Thread...")
             orchestrator.orchestrate_post(app)
+            action_taken = True
             
-        # Action 2: Horde Replier (Common) - 40% chance per minute
-        if random.random() < 0.40:
+        # Action 2: Horde Replier (Common)
+        reply_chance = Config.RUMBLE_REPLY_CHANCE
+        if random.random() < reply_chance:
             from backend.models.content import Post
             # Get posts from last 24 hours
             recent_posts = Post.query.order_by(Post.created_at.desc()).limit(20).all()
@@ -58,4 +62,8 @@ def deadit_lifecycle():
                 target_post = random.choice(recent_posts)
                 print(f"💀 [LifeCycle] Triggering Reply to {target_post.title}...")
                 orchestrator.orchestrate_moan(target_post.id, app=app)
+                action_taken = True
+        
+        if not action_taken:
+            print("💀 [LifeCycle] Resting... (No chaos this tick)")
 
