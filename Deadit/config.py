@@ -11,3 +11,8 @@ class Config:
     
     # Debug Logging
     DEBUG_AI = os.environ.get('DEBUG_AI', 'True').lower() == 'true'
+    
+    # Automation Settings
+    # Seconds between "Deadit Life Cycle" checks (default: 5 minutes)
+    RUMBLE_INTERVAL = int(os.environ.get('RUMBLE_INTERVAL', 300))
+    SCHEDULER_API_ENABLED = True

@@ -1,4 +1,5 @@
 from flask import Flask
+import os
 from config import Config
 from extensions import db, login_manager, migrate
 from backend.models import user, content
@@ -22,6 +23,13 @@ def create_app(config_class=Config):
     @app.route('/health')
     def health_check():
         return {'status': 'healthy', 'message': 'Deadit backend is running'}
+
+    # Initialize Automation Scheduler
+    from backend.scheduler import init_scheduler
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        # Only start scheduler in production or in the reloader's main process
+        # to prevent double-execution during dev restart.
+        init_scheduler(app)
 
     return app
 

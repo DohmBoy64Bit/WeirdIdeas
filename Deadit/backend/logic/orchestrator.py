@@ -154,3 +154,82 @@ class Orchestrator:
         if random.random() < 0.3:
             threading.Thread(target=self.orchestrate_moan, args=(post_id, None, app)).start()
 
+    def orchestrate_post(self, app=None):
+        """
+        Triggers a new top-level thread creation by a random zombie.
+        """
+        # Pick a random subdeadit
+        subdeadits = [
+            "r/BrainsGoneWild", "r/ZombieSurvival", "r/MoanHelpDesk", "r/FreshMeat", 
+            "r/ShambleSports", "r/AskRottingOnes", "r/ApocalypseMemes", 
+            "r/UndeadRelationships", "r/RottingAesthetics", "r/HordeManagement"
+        ]
+        subdeadit = random.choice(subdeadits)
+        
+        if app:
+            with app.app_context():
+                self._create_post_process(subdeadit)
+        else:
+            self._create_post_process(subdeadit)
+
+    def _create_post_process(self, subdeadit):
+        try:
+            # 1. Pick a Zombie
+            import json
+            import os
+            import glob
+            
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__) or os.getcwd()))
+            roster_path = os.path.join(base_path, 'personas', 'roster.json')
+            
+            shamblers = []
+            try:
+                with open(roster_path, 'r', encoding='utf-8') as f:
+                    roster = json.load(f)
+                    shamblers = roster.get('shamblers', [])
+            except:
+                shamblers = ["GoryGarry"]
+
+            zombies_path = os.path.join(base_path, 'personas', 'zombies')
+            custom_zombies = []
+            try:
+                 files = glob.glob(os.path.join(zombies_path, "Zombie*.json"))
+                 for f in files:
+                     name = os.path.basename(f).replace("Zombie", "").replace(".json", "")
+                     custom_zombies.append(name)
+            except:
+                pass
+
+            pool = custom_zombies + shamblers
+            zombie_name = random.choice(pool)
+            
+            zombie_user = User.query.filter_by(username=zombie_name).first()
+            if not zombie_user:
+                zombie_user = User(username=zombie_name, is_zombie=True)
+                zombie_user.set_password("brains")
+                db.session.add(zombie_user)
+                db.session.commit()
+            
+            # 2. Load Persona
+            from backend.logic.personas import PersonaLoader
+            persona_override = PersonaLoader.load_zombie_persona(zombie_name)
+            
+            # 3. Generate Post
+            print(f"Orchestrating new post by {zombie_name} in {subdeadit}...")
+            post_data = self.generator.generate_post(subdeadit, persona_override)
+            
+            if post_data:
+                new_post = Post(
+                    title=post_data.get('title', 'Brains?'),
+                    body=post_data.get('body', 'Ungh...'),
+                    flair=post_data.get('flair'),
+                    subdeadit=subdeadit,
+                    user_id=zombie_user.id
+                )
+                db.session.add(new_post)
+                db.session.commit()
+                print(f"✅ Created new thread {new_post.id}: {new_post.title}")
+                
+        except Exception as e:
+            print(f"Error orchestrating post: {e}")
+

@@ -26,8 +26,14 @@ class QualityGate:
             reasons.append(f"Exceeded max depth of {self.max_depth}")
 
         # 3. Sentence Limit Check (Max 4 sentences)
-        sentences = re.split(r'[.!?]+', body)
-        sentences = [s for s in sentences if s.strip()]
+        import nltk
+        try:
+            nltk.data.find('tokenizers/punkt')
+        except LookupError:
+            nltk.download('punkt', quiet=True)
+            nltk.download('punkt_tab', quiet=True)
+            
+        sentences = nltk.sent_tokenize(body)
         if len(sentences) > 4:
             reasons.append(f"Exceeded max sentence limit (found {len(sentences)}, max 4)")
 

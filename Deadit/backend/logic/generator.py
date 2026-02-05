@@ -150,4 +150,74 @@ class ZombieGenerator:
             
         prompt += "\nTask: Generate an in-character moan."
         return prompt
+    def generate_post(self, subdeadit, persona_override=None):
+        """
+        Generates a new zombie post (Title + Body).
+        """
+        # 1. Load Style & Persona
+        style = self.style_adapter.get_subdeadit_style(subdeadit)
+        persona = self._load_persona(persona_override)
+        
+        # 2. Construction & Retry Loop
+        max_retries = 3 # Less critical than comments, can fail faster
+        
+        for attempt in range(max_retries):
+            # Construct Prompt
+            system_prompt = self._build_system_prompt_for_post(persona, subdeadit, style)
+            user_prompt = f"TASK: Create a new discussion thread for {subdeadit}. Be creative, weird, and engaging."
+            
+            # 3. Call LLM
+            from config import Config
+            if Config.DEBUG_AI:
+                print(f"\n--- [DEBUG] POST GENERATION ATTEMPT {attempt + 1} ---")
+                print(f"SYSTEM PROMPT:\n{system_prompt}")
+            
+            response_text = self.client.generate(user_prompt, system_prompt=system_prompt)
+            
+            if Config.DEBUG_AI:
+                print(f"LLM RESPONSE:\n{response_text}")
+                
+            if not response_text:
+                continue
+                
+            # 4. Parse JSON
+            try:
+                start = response_text.find('{')
+                end = response_text.rfind('}') + 1
+                if start != -1 and end != -1:
+                    json_str = response_text[start:end]
+                    post_data = json.loads(json_str)
+                    
+                    # Basic Validation
+                    if 'title' in post_data and 'body' in post_data:
+                        return post_data
+            except Exception as e:
+                print(f"JSON Error in Post Gen: {e}")
+                
+        return None
 
+    def _build_system_prompt_for_post(self, persona, subdeadit, style):
+        prompt = f"IDENTITY: {persona['role']}\n"
+        prompt += f"TONE: {persona['voice']}\n"
+        prompt += f"CURRENT SUBDEADIT: {subdeadit}\n"
+        prompt += f"SUBDEADIT STYLE: {style.get('tone', 'casual')}\n"
+        
+        lexicon = set(style.get('lexicon', []))
+        if 'extra_lexicon' in persona:
+            lexicon.update(persona['extra_lexicon'])
+        prompt += f"LEXICON: {', '.join(lexicon)}\n\n"
+        
+        prompt += "THEATER RULES:\n"
+        prompt += "1. You are starting a NEW discussion thread.\n"
+        prompt += "2. The Title should be catchy and relevant to the subdeadit.\n"
+        prompt += "3. The Body should be your personal zombie thought, question, or story.\n"
+        prompt += "4. Use at least one lexicon term.\n"
+        prompt += "5. Keep body under 6 sentences.\n"
+        
+        prompt += "\nOUTPUT FORMAT: Valid JSON ONLY.\n"
+        prompt += """{
+    "title": "your post title",
+    "body": "your post body content",
+    "flair": "optional flair"
+}"""
+        return prompt
