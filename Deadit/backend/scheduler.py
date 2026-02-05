@@ -23,9 +23,12 @@ def deadit_lifecycle():
     try:
         app = current_app._get_current_object()
     except RuntimeError:
-        # If testing manually without push_context
-        print("⚠️  No app context found for lifecycle.")
-        return
+        # If running in background thread via scheduler, try looking at the bound app
+        if scheduler.app:
+            app = scheduler.app
+        else:
+            print("⚠️  No app context found for lifecycle.")
+            return
 
     with app.app_context():
         # Only run if explicitly enabled in production or dev
