@@ -3,9 +3,10 @@ import json
 from config import Config
 
 class OllamaClient:
-    def __init__(self, base_url=None, model=None):
+    def __init__(self, base_url=None, model=None, app=None):
         self.base_url = base_url or Config.OLLAMA_BASE_URL
         self.model = model or Config.OLLAMA_MODEL
+        self.app = app # Store for config access if needed
 
     def generate(self, prompt, system_prompt=None, options=None):
         """

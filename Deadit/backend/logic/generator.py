@@ -21,7 +21,7 @@ class ZombieGenerator:
         persona = self._load_persona(persona_override)
         
         # 2. Construction & Retry Loop
-        max_retries = 3
+        max_retries = 10
         retry_feedback = None
         
         for attempt in range(max_retries):
@@ -30,7 +30,18 @@ class ZombieGenerator:
             user_prompt = self._build_user_prompt(post, parent_comment, retry_feedback)
             
             # 3. Call LLM
+            # 3. Call LLM
+            # 3. Call LLM
+            from config import Config
+            if Config.DEBUG_AI:
+                print(f"\n--- [DEBUG] ATTEMPT {attempt + 1} ---")
+                print(f"SYSTEM PROMPT:\n{system_prompt}")
+                print(f"USER PROMPT:\n{user_prompt}")
+            
             response_text = self.client.generate(user_prompt, system_prompt=system_prompt)
+            
+            if Config.DEBUG_AI:
+                print(f"LLM RESPONSE:\n{response_text}")
             
             if not response_text:
                 continue

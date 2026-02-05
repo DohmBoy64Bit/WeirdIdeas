@@ -47,6 +47,16 @@ class Orchestrator:
             from backend.logic.personas import PersonaLoader
             persona_override = PersonaLoader.load_zombie_persona(zombie_name)
             
+            # --- ADD: Include subdeadit context in persona_override ---
+            from backend.logic.style_adapter import StyleAdapter
+            style = StyleAdapter().get_subdeadit_style(post.subdeadit)
+            if 'lexicon' in style:
+                if 'lexicon' not in persona_override:
+                    persona_override['lexicon'] = []
+                persona_override['lexicon'].extend(style['lexicon'])
+            if 'tone' in style:
+                persona_override['tone'] = style['tone']
+            
             comment_data = self.generator.generate_comment(
                 post, 
                 parent_comment=parent_comment, 
@@ -56,17 +66,45 @@ class Orchestrator:
             
             if comment_data:
                 self._save_ai_comment(post.id, parent_comment_id, comment_data, zombie_user)
-                
+              
         except Exception as e:
             print(f"Orchestration Error: {e}")
 
     def _get_or_create_zombie(self, post_id):
-        zombie_names = [
-            "RottingRon", "ShamblingSally", "BrainBuffetBrian", "DecayDave", 
-            "GoryGarry", "PutridPatty", "LimpingLarry", "ZombieZelda",
-            "NecroticNed", "FleshieFelicia", "StumpySteve", "MaggotMandy"
-        ]
+        import json
+        import os
+        import glob
         
+        # 1. Load Shamblers from roster.json
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__) or os.getcwd()))
+        roster_path = os.path.join(base_path, 'personas', 'roster.json')
+        
+        shamblers = []
+        try:
+            with open(roster_path, 'r', encoding='utf-8') as f:
+                roster = json.load(f)
+                shamblers = roster.get('shamblers', [])
+        except Exception as e:
+            print(f"Error loading roster from {roster_path}: {e}")
+            shamblers = ["GoryGarry", "LimpingLarry"] # Fallback
+
+        # 2. Scan Directory for Custom Zombies (Zombie*.json)
+        zombies_path = os.path.join(base_path, 'personas', 'zombies')
+        custom_zombies = []
+        try:
+             # Find all files starting with "Zombie"
+             files = glob.glob(os.path.join(zombies_path, "Zombie*.json"))
+             for f in files:
+                 # Extract name: "ZombieRottingRon.json" -> "RottingRon"
+                 filename = os.path.basename(f)
+                 name = filename.replace("Zombie", "").replace(".json", "")
+                 custom_zombies.append(name)
+        except Exception as e:
+            print(f"Error scanning personas directory: {e}")
+
+        # Combine pools
+        zombie_names = custom_zombies + shamblers
+
         post = Post.query.get(post_id)
         existing_authors = {c.author.username for c in post.comments}
         available_names = [n for n in zombie_names if n not in existing_authors]
